@@ -23,9 +23,7 @@ async def create(
                 name=file_name, data=file_bytes, content_type=media.content_type
             )
             if result is not None:
-                get_url = models.Media.convert_image_name_to_url(
-                    media_url=result, request=request
-                )
+                get_url = models.Media.convert_image_name_to_url(media_url=result, request=request)
                 await models.Media.create(
                     url=get_url,
                     content_type=media.content_type,

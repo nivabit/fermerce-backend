@@ -7,15 +7,11 @@ from fermerce.lib.utils.random_string import random_str
 
 
 class IProductPromoCodeBase(pyd.BaseModel):
-    code: pyd.constr(max_length=25, min_length=4, strip_whitespace=True) = random_str(
-        20
-    )
+    code: pyd.constr(max_length=25, min_length=4, strip_whitespace=True) = random_str(20)
     discount: t.Optional[float]
     single: bool = True
     start: t.Optional[datetime.datetime] = datetime.datetime.today()
-    end: t.Optional[datetime.datetime] = datetime.datetime.today() + datetime.timedelta(
-        days=7
-    )
+    end: t.Optional[datetime.datetime] = datetime.datetime.today() + datetime.timedelta(days=7)
 
 
 class IProductPromoCodeIn(IProductPromoCodeBase):

@@ -42,7 +42,7 @@ class IOrderIn(pyd.BaseModel):
 
 
 class IOrderUpdate(pyd.BaseModel):
-    tracking_id:str
+    tracking_id: str
     status_id: uuid.UUID
 
 

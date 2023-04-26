@@ -100,9 +100,7 @@ async def filter(
     query = None
     if search_type == SearchType._or:
         query = models.User.filter(
-            Q(is_active=is_active)
-            | Q(is_archived=is_archived)
-            | Q(is_suspended=is_suspended)
+            Q(is_active=is_active) | Q(is_archived=is_archived) | Q(is_suspended=is_suspended)
         )
     else:
         query = models.User.filter(
@@ -116,29 +114,17 @@ async def filter(
     query = query.all().offset(offset).limit(limit)
     if sort_by == SortOrder.asc and bool(order_by):
         query = query.order_by(
-            *[
-                f"-{col}"
-                for col in order_by.split(",")
-                if col in models.User._meta.fields
-            ]
+            *[f"-{col}" for col in order_by.split(",") if col in models.User._meta.fields]
         )
     elif sort_by == SortOrder.desc and bool(order_by):
         query = query.order_by(
-            *[
-                f"{col}"
-                for col in order_by.split(",")
-                if col in models.User._meta.fields
-            ]
+            *[f"{col}" for col in order_by.split(",") if col in models.User._meta.fields]
         )
     else:
         query = query.order_by("-id")
     if select:
         query = query.values(
-            *[
-                col.strip()
-                for col in select.split(",")
-                if col.strip() in models.User._meta.fields
-            ]
+            *[col.strip() for col in select.split(",") if col.strip() in models.User._meta.fields]
         )
     if load_related:
         select_list = []
@@ -146,7 +132,7 @@ async def filter(
             select_list = select_list.extend(models.Staff._meta.fk_fields)
         elif models.Staff._meta.m2m_fields:
             select_list = select_list.extend(models.Staff._meta.m2m_fields)
-        
+
         query = query.select_related(select_list)
     results = await query
     # Count the total number of results with the same filter.
@@ -199,9 +185,7 @@ async def reset_password_link(
                 else users_obj.username,
             )
         )
-        return IResponseMessage(
-            message="account need to be verified, before reset their password"
-        )
+        return IResponseMessage(message="account need to be verified, before reset their password")
     if not users_obj:
         raise error.NotFoundError("User not found")
     token = security.JWTAUTH.data_encoder(

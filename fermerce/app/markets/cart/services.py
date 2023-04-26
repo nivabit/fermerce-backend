@@ -38,9 +38,7 @@ async def create(data_in: schemas.ICartIn, user: User) -> models.Cart:
     return new_cart
 
 
-async def update(
-    data_in: schemas.ICartIn, user: User, cart_id: uuid.UUID
-) -> models.Cart:
+async def update(data_in: schemas.ICartIn, user: User, cart_id: uuid.UUID) -> models.Cart:
     get_cart = await Cart.get_or_none(id=cart_id, user=user)
     if not get_cart:
         raise error.NotFoundError("Cart not found")

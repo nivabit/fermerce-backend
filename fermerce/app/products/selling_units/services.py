@@ -10,9 +10,7 @@ from fermerce.app.products.product.models import Product
 from fastapi import Response
 
 
-async def create(
-    data_in: schemas.IProductSellingUnitIn, user: User
-) -> models.ProductSellingUnit:
+async def create(data_in: schemas.IProductSellingUnitIn, user: User) -> models.ProductSellingUnit:
     get_product = await Product.get_or_none(pk=data_in.product_id, vender=user.vendor)
     if not get_product:
         raise error.NotFoundError("Product not found")
@@ -55,9 +53,7 @@ async def get_product_selling_units(
     return get_selling_unit
 
 
-async def update(
-    data_in: schemas.IProductSellingUnitIn, user: User
-) -> models.ProductSellingUnit:
+async def update(data_in: schemas.IProductSellingUnitIn, user: User) -> models.ProductSellingUnit:
     selling_unit = await models.ProductSellingUnit.get_or_none(
         product=data_in.product_id, unit=data_in.unit_id, product__vendor=user.vendor
     )

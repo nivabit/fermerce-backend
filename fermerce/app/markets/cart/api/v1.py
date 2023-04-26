@@ -11,9 +11,7 @@ router = APIRouter(prefix="/carts", tags=["Carts"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_cart(
-    data_in: schemas.ICartIn, user: User = Depends(dependency.require_user)
-):
+async def create_cart(data_in: schemas.ICartIn, user: User = Depends(dependency.require_user)):
     return await services.create(data_in=data_in, user=user)
 
 
@@ -58,7 +56,5 @@ async def get_cart(cart_id: uuid.UUID, user: User = Depends(dependency.require_u
 
 
 @router.delete("/{cart_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_cart(
-    cart_id: uuid.UUID, user: User = Depends(dependency.require_user)
-):
+async def delete_cart(cart_id: uuid.UUID, user: User = Depends(dependency.require_user)):
     return await services.delete(cart_id, user)

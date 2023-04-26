@@ -17,9 +17,7 @@ class Vendor(models.Model):
         "models.User", related_name="vendor"
     )
     rating = fields.FloatField(default=0.0, null=True)
-    countries: fields.ManyToManyRelation[Country] = fields.ManyToManyField(
-        "models.Country"
-    )
+    countries: fields.ManyToManyRelation[Country] = fields.ManyToManyField("models.Country")
     is_suspended = fields.BooleanField(default=False)
     is_active = fields.BooleanField(default=True)
     is_archived = fields.BooleanField(default=False)

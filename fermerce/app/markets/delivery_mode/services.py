@@ -74,9 +74,7 @@ async def update(
 async def delete(
     delivery_mode_id: uuid.UUID,
 ) -> None:
-    deleted_delivery_mode = await models.DeliveryMode.filter(
-        id=delivery_mode_id
-    ).delete()
+    deleted_delivery_mode = await models.DeliveryMode.filter(id=delivery_mode_id).delete()
     if not deleted_delivery_mode:
         raise error.NotFoundError("delivery type does not exist")
     return Response(status_code=status.HTTP_204_NO_CONTENT)

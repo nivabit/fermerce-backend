@@ -6,9 +6,7 @@ from fermerce.app.users.staff.dependency import require_dispatcher
 router = APIRouter(prefix="/trackings", tags=["Tracking"])
 
 
-@router.post(
-    "/", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_dispatcher)]
-)
+@router.post("/", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_dispatcher)])
 async def create_tracking(data_in: schemas.ITrackIn):
     return await services.create(data_in=data_in)
 

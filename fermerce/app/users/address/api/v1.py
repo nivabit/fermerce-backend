@@ -9,9 +9,7 @@ from fermerce.core.enum.sort_type import SortOrder
 router = APIRouter(prefix="/shipping_addresses", tags=["Shipping shipping address"])
 
 
-@router.post(
-    "/", status_code=status.HTTP_201_CREATED, response_model=schemas.IAddressOut
-)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.IAddressOut)
 async def create_address(
     data_in: schemas.IAddressIn,
     user: User = Depends(require_user),
@@ -34,9 +32,7 @@ async def get_address_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(
-        default="id", description="order by attribute, e.g. id"
-    ),
+    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
 ):
     return await services.filter(
         filter_string=filter_string,

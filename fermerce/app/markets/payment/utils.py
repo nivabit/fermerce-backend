@@ -21,9 +21,7 @@ def calculate_discount(
     data = DecimalToFloat(original_price=original_price, discount=discount)
     if int(discount) == 0:
         return original_price
-    discounted_price = data.original_price - (
-        (data.original_price * data.discount) / 100
-    )
+    discounted_price = data.original_price - ((data.original_price * data.discount) / 100)
     return discounted_price
 
 

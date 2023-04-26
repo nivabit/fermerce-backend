@@ -11,9 +11,7 @@ class Auth(models.Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4())
     refresh_token = fields.CharField(max_length=300, null=True)
     access_token = fields.CharField(max_length=300, null=True)
-    user = fields.ForeignKeyField(
-        "models.User", related_name="auths", on_delete=fields.CASCADE
-    )
+    user = fields.ForeignKeyField("models.User", related_name="auths", on_delete=fields.CASCADE)
     ip_address = fields.CharField(max_length=20, unique=True, null=False, index=True)
 
     @staticmethod

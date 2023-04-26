@@ -3,9 +3,7 @@ import time
 from fermerce.app.users.auth import models
 
 
-async def create_token(
-    user_ip: str, refresh_token: str, access_token: str, user_id: str
-):
+async def create_token(user_ip: str, refresh_token: str, access_token: str, user_id: str):
     time.sleep(5)
     check_token = await models.Auth.get_or_none(user=user_id, ip_address=user_ip)
     if check_token:

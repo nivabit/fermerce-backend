@@ -20,9 +20,7 @@ async def create(user: User, request: Request, data_in=schemas.IVendorIn):
     check_vendor = await models.Vendor.get_or_none(user=user.id)
     if check_vendor:
         raise error.BadDataError("Business account already exist")
-    check_business_name = await models.Vendor.get_or_none(
-        business_name=data_in.business_name
-    )
+    check_business_name = await models.Vendor.get_or_none(business_name=data_in.business_name)
     if check_business_name:
         raise error.BadDataError("Business account already")
     to_create = dict(business_name=data_in.business_name)
@@ -49,20 +47,14 @@ async def create(user: User, request: Request, data_in=schemas.IVendorIn):
     raise error.ServerError("Error creating business account")
 
 
-async def update(
-    vendor_id: uuid.UUID, user: User, request: Request, data_in=schemas.IVendorIn
-):
+async def update(vendor_id: uuid.UUID, user: User, request: Request, data_in=schemas.IVendorIn):
     check_vendor = await models.Vendor.get_or_none(user=user.id)
     if not check_vendor:
         raise error.NotFoundError("Business Not found")
-    check_business_name = await models.Vendor.get_or_none(
-        business_name=data_in.business_name
-    )
+    check_business_name = await models.Vendor.get_or_none(business_name=data_in.business_name)
     if check_vendor.id != check_business_name.id:
         if check_business_name:
-            raise error.BadDataError(
-                f"Business with name {data_in.business_name} already"
-            )
+            raise error.BadDataError(f"Business with name {data_in.business_name} already")
     to_update = dict(business_name=data_in.business_name)
     if data_in.logo:
         logo = await Media.create(
@@ -110,9 +102,7 @@ async def filter(
     query = None
     if search_type == SearchType._or:
         query = models.Vendor.filter(
-            Q(is_active=is_active)
-            | Q(is_archived=is_archived)
-            | Q(is_suspended=is_suspended)
+            Q(is_active=is_active) | Q(is_archived=is_archived) | Q(is_suspended=is_suspended)
         )
     else:
         query = models.Vendor.filter(
@@ -124,19 +114,11 @@ async def filter(
     query = query.all().offset(offset).limit(limit)
     if sort_by == SortOrder.asc and bool(order_by):
         query = query.order_by(
-            *[
-                f"-{col}"
-                for col in order_by.split(",")
-                if col in models.Vendor._meta.fields
-            ]
+            *[f"-{col}" for col in order_by.split(",") if col in models.Vendor._meta.fields]
         )
     elif sort_by == SortOrder.desc and bool(order_by):
         query = query.order_by(
-            *[
-                f"{col}"
-                for col in order_by.split(",")
-                if col in models.Vendor._meta.fields
-            ]
+            *[f"{col}" for col in order_by.split(",") if col in models.Vendor._meta.fields]
         )
     else:
         query = query.order_by("-id")
@@ -155,8 +137,7 @@ async def filter(
             *[
                 col.strip()
                 for col in select.split(",")
-                if col.strip() in models.Vendor._meta.fields
-                and col.strip() not in to_pre_fetch
+                if col.strip() in models.Vendor._meta.fields and col.strip() not in to_pre_fetch
             ]
         )
     results = await query
@@ -205,13 +186,9 @@ async def remove_vendor_data(data_in: schemas.IRemoveVendor) -> None:
         if data_in.permanent:
             await vendor_to_remove.delete()
         else:
-            await vendor_to_remove.update_from_dict(
-                dict(is_active=False, archived=True)
-            )
+            await vendor_to_remove.update_from_dict(dict(is_active=False, archived=True))
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    raise error.NotFoundError(
-        f"Vendor with vendor_id {data_in.vendor_id} does not exist"
-    )
+    raise error.NotFoundError(f"Vendor with vendor_id {data_in.vendor_id} does not exist")
 
 
 async def get_vendor_details(vendor_id: str, load_related: bool = False):
@@ -237,8 +214,7 @@ async def get_vendor_details(vendor_id: str, load_related: bool = False):
     if result and load_related:
         items = {
             field_name: list(getattr(result, field_name))
-            if hasattr(result, field_name)
-            and field_name in models.Vendor._meta.m2m_fields
+            if hasattr(result, field_name) and field_name in models.Vendor._meta.m2m_fields
             else dict(getattr(result, field_name))
             if field_name in models.Vendor._meta.fk_fields
             or field_name in models.Vendor._meta.o2o_fields

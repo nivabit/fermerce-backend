@@ -23,9 +23,7 @@ async def create(
         raise error.NotFoundError("Order delivery mode not found")
     get_carts = await Cart.filter(user=user, id__in=data_in.cart_ids).all()
     if not get_carts:
-        raise error.NotFoundError(
-            "No product in cart, please add product to cart to continue"
-        )
+        raise error.NotFoundError("No product in cart, please add product to cart to continue")
     get_initial_status = await Status.get_or_none(name__icontains="pending")
     if not get_initial_status:
         get_initial_status = await Status.create(name="pending")
@@ -59,9 +57,7 @@ async def create(
 
 
 async def update_order_status(data_in: schemas.IOrderUpdate) -> dict:
-    get_user_order_item = await models.OrderItem.get_or_none(
-        tracking_id=data_in.tracking_id
-    )
+    get_user_order_item = await models.OrderItem.get_or_none(tracking_id=data_in.tracking_id)
     if not get_user_order_item:
         raise error.NotFoundError("Order item is not found")
     get_status = await Status.get_or_none(id=data_in.status_id)
@@ -112,9 +108,7 @@ async def get_order(
     user: User,
     order_id: uuid.UUID,
 ) -> models.Order:
-    order = await models.OrderItem.get_or_none(
-        order_id=order_id, user=user
-    ).prefetch_related(
+    order = await models.OrderItem.get_or_none(order_id=order_id, user=user).prefetch_related(
         *models.Order._meta.fk_fields,
         *models.Order._meta.backward_fk_fields,
     )
@@ -127,9 +121,7 @@ async def get_order_items(
     user: User,
     order_id: str,
 ) -> models.Order:
-    order = await models.OrderItem.filter(
-        order__id=order_id, user=user
-    ).prefetch_related(
+    order = await models.OrderItem.filter(order__id=order_id, user=user).prefetch_related(
         *models.OrderItem._meta.fk_fields, *models.OrderItem._meta.backward_fk_fields
     )
     if order:

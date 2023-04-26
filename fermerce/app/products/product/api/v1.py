@@ -46,9 +46,7 @@ async def get_users_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(
-        default="id", description="order by attribute, e.g. id"
-    ),
+    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
     is_active: t.Optional[bool] = True,
     is_suspended: t.Optional[bool] = False,
     in_stock: t.Optional[bool] = False,
@@ -86,9 +84,7 @@ async def update_product(
     data_in: schemas.IProductIn,
     user: User = Depends(dependency.require_vendor),
 ) -> schemas.IProductShortInfo:
-    return await services.update(
-        user=user, product_id=product_id, data_in=data_in, request=request
-    )
+    return await services.update(user=user, product_id=product_id, data_in=data_in, request=request)
 
 
 @router.get(
@@ -130,9 +126,7 @@ async def update_product_detail(
     data_in: schemas.IProductIn,
     user: User = Depends(dependency.require_vendor),
 ) -> schemas.IProductShortInfo:
-    return await services.update_product_detail(
-        user=user, detail_id=detail_id, data_in=data_in
-    )
+    return await services.update_product_detail(user=user, detail_id=detail_id, data_in=data_in)
 
 
 @router.delete(

@@ -47,9 +47,7 @@ async def filter(
     query = None
     if search_type == SearchType._or:
         query = models.Staff.filter(
-            Q(is_active=is_active)
-            | Q(is_archived=is_archived)
-            | Q(is_suspended=is_suspended)
+            Q(is_active=is_active) | Q(is_archived=is_archived) | Q(is_suspended=is_suspended)
         )
     else:
         query = models.Staff.filter(
@@ -63,38 +61,24 @@ async def filter(
     query = query.all().offset(offset).limit(limit)
     if sort_by == SortOrder.asc and bool(order_by):
         query = query.order_by(
-            *[
-                f"-{col}"
-                for col in order_by.split(",")
-                if col in models.Staff._meta.fields
-            ]
+            *[f"-{col}" for col in order_by.split(",") if col in models.Staff._meta.fields]
         )
     elif sort_by == SortOrder.desc and bool(order_by):
         query = query.order_by(
-            *[
-                f"{col}"
-                for col in order_by.split(",")
-                if col in models.Staff._meta.fields
-            ]
+            *[f"{col}" for col in order_by.split(",") if col in models.Staff._meta.fields]
         )
     else:
         query = query.order_by("-id")
     if select:
         query = query.values(
-            *[
-                col.strip()
-                for col in select.split(",")
-                if col.strip() in models.Staff._meta.fields
-            ]
+            *[col.strip() for col in select.split(",") if col.strip() in models.Staff._meta.fields]
         )
         if load_related:
             select_list = []
             if models.Staff._meta.fk_fields:
                 select_list = select_list.extend(",".join(models.Staff._meta.fk_fields))
             elif models.Staff._meta.m2m_fields:
-                select_list = select_list.extend(
-                    ",".join(models.Staff._meta.m2m_fields)
-                )
+                select_list = select_list.extend(",".join(models.Staff._meta.m2m_fields))
             query = query.select_related(select_list)
     results = await query
 
@@ -163,9 +147,7 @@ async def add_staff_permission(
             existed_perm.append(permission.name)
             get_perms.remove(permission)
     if existed_perm:
-        raise error.DuplicateError(
-            f"Permission `{','.join(existed_perm)}` already exists"
-        )
+        raise error.DuplicateError(f"Permission `{','.join(existed_perm)}` already exists")
     await get_staff.permissions.add(*get_perms)
     return IResponseMessage(message="Staff permission was updated successfully")
 
@@ -173,9 +155,7 @@ async def add_staff_permission(
 async def get_staff_permissions(
     staff_id: uuid.UUID,
 ) -> t.List[Permission]:
-    check_Staff = await models.Staff.get_or_none(id=staff_id).select_related(
-        "permissions"
-    )
+    check_Staff = await models.Staff.get_or_none(id=staff_id).select_related("permissions")
     if check_Staff:
         return await check_Staff.permissions.all()
     raise error.NotFoundError("Staff not found")

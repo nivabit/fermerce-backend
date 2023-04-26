@@ -12,18 +12,14 @@ from core.schema.response import IResponseMessage
 router = APIRouter(prefix="/payments", tags=["User payments"])
 
 
-@router.post(
-    "/", status_code=status.HTTP_201_CREATED, response_model=schema.IPaymentInitOut
-)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schema.IPaymentInitOut)
 async def create_payment_link(
     data_in: schema.IPaymentIn, user: User = Depends(dependency.require_user)
 ):
     return await service.create_payment(data_in=data_in, user=user)
 
 
-@router.get(
-    "/", status_code=status.HTTP_200_OK, response_model=t.List[schema.IPaymentOrderOut]
-)
+@router.get("/", status_code=status.HTTP_200_OK, response_model=t.List[schema.IPaymentOrderOut])
 async def get_payment_list(
     user: User = Depends(dependency.require_user),
     filter: t.Optional[str] = Query(
@@ -39,9 +35,7 @@ async def get_payment_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(
-        default="id", description="order by attribute, e.g. id"
-    ),
+    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
     load_related: bool = False,
 ):
     return await service.payment_list(
@@ -61,9 +55,7 @@ async def get_payment_list(
     status_code=status.HTTP_200_OK,
     response_model=schema.IPaymentOrderOut,
 )
-async def get_payment_by_id(
-    payment_id: uuid.UUID, user: User = Depends(dependency.require_user)
-):
+async def get_payment_by_id(payment_id: uuid.UUID, user: User = Depends(dependency.require_user)):
     return await service.get_payment(payment_id, user)
 
 

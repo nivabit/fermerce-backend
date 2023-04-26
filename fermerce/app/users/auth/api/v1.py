@@ -34,6 +34,4 @@ async def login_token_refresh(
     request: Request,
     task: BackgroundTasks,
 ):
-    return await services.login_token_refresh(
-        data_in=data_in, request=request, task=task
-    )
+    return await services.login_token_refresh(data_in=data_in, request=request, task=task)

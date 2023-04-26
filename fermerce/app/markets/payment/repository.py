@@ -110,9 +110,7 @@ class PaymentRepository(BaseRepository[model.Payment]):
             )
         elif freq == Frequent.monthly:
             start_of_month = date(start_date.year, start_date.month, 1)
-            end_of_month = date(end_date.year, end_date.month + 1, 1) - timedelta(
-                days=1
-            )
+            end_of_month = date(end_date.year, end_date.month + 1, 1) - timedelta(days=1)
             stmt = (
                 sa.select(sum_column)
                 .where(self.model.created_at >= start_of_month)

@@ -37,7 +37,5 @@ async def delete_selling_unit(
 
 
 @router.get("/", response_model=t.List[schemas.IProductSellingUnitOut])
-async def get_product_selling_unit(
-    product_id: uuid.UUID, user: User = Depends(require_vendor)
-):
+async def get_product_selling_unit(product_id: uuid.UUID, user: User = Depends(require_vendor)):
     return await services.get_product_selling_units(product_id=product_id, user=user)

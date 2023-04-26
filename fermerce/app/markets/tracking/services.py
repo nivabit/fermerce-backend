@@ -8,9 +8,7 @@ from fermerce.app.markets.tracking import models, schemas
 
 
 async def create(data_in: schemas.ITrackIn) -> models.Tracking:
-    get_order_item = await OrderItem.get_or_none(
-        tracking_id=data_in.order_item_tracking_id
-    )
+    get_order_item = await OrderItem.get_or_none(tracking_id=data_in.order_item_tracking_id)
     if not get_order_item:
         raise error.NotFoundError("order item not found")
     new_track = await models.Tracking.create(
@@ -23,9 +21,7 @@ async def create(data_in: schemas.ITrackIn) -> models.Tracking:
 
 
 async def update(track_id: uuid.UUID, data_in: schemas.ITrackIn) -> models.Tracking:
-    get_order_item = await OrderItem.get_or_none(
-        tracking_id=data_in.order_item_tracking_id
-    )
+    get_order_item = await OrderItem.get_or_none(tracking_id=data_in.order_item_tracking_id)
     if not get_order_item:
         raise error.NotFoundError("order item not found")
     get_track = await models.Tracking.get_or_none(
@@ -36,9 +32,9 @@ async def update(track_id: uuid.UUID, data_in: schemas.ITrackIn) -> models.Track
     )
     if get_track:
         raise error.DuplicateError("tracking already exist for this order item")
-    result = await models.Tracking.filter(
-        id=track_id, order_item=get_order_item
-    ).update(note=data_in.note, location=data_in.location)
+    result = await models.Tracking.filter(id=track_id, order_item=get_order_item).update(
+        note=data_in.note, location=data_in.location
+    )
     if result:
         return IResponseMessage(message="order item tracking was updated successfully")
     raise error.ServerError("error updating order item tracking")

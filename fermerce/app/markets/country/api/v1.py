@@ -42,9 +42,7 @@ async def get_country_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(
-        default="id", description="order by attribute, e.g. id"
-    ),
+    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
 ):
     return await services.filter(
         filter_string=filter_string,
@@ -70,9 +68,7 @@ async def get_country(country_id: uuid.UUID) -> schemas.ICountryOut:
     response_model=schemas.ICountryOut,
     # dependencies=[Depends(require_super_admin_or_admin)],
 )
-async def update_country(
-    country_id: uuid.UUID, type: schemas.ICountryIn
-) -> schemas.ICountryOut:
+async def update_country(country_id: uuid.UUID, type: schemas.ICountryIn) -> schemas.ICountryOut:
     return await services.update(country_id=country_id, data_in=type)
 
 

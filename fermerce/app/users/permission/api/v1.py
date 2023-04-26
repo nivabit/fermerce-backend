@@ -6,8 +6,6 @@ from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import ITotalCount
 
 
-
-
 router = APIRouter(prefix="/permissions", tags=["Permissions"])
 
 
@@ -42,9 +40,7 @@ async def get_permission_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(
-        default="id", description="order by attribute, e.g. id"
-    ),
+    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
 ):
     return await services.filter(
         filter_string=filter_string,

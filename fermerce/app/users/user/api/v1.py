@@ -57,8 +57,6 @@ async def update_user_password_no_token(
     return await services.update_users_password_no_token(data_in, user_data)
 
 
-@router.post(
-    "/check/dev", status_code=status.HTTP_200_OK, response_model=IResponseMessage
-)
+@router.post("/check/dev", status_code=status.HTTP_200_OK, response_model=IResponseMessage)
 async def check_user_email(data_in: schemas.ICheckUserEmail) -> IResponseMessage:
     return await services.check_user_email(data_in)

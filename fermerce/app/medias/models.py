@@ -38,9 +38,7 @@ class Media(models.Model):
 
     @staticmethod
     def convert_image_name_to_url(media_url: str, request: Request) -> str:
-        image_full_url = (
-            f"{request.url_for(config.media_url_endpoint_name, uri=media_url)}"
-        )
+        image_full_url = f"{request.url_for(config.media_url_endpoint_name, uri=media_url)}"
         return image_full_url
 
     def check_file_type(

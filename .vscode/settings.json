@@ -1,0 +1,20 @@
+{
+  "python.formatting.provider": "none",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/**/__pycache__": true,
+    "**/**.pytest_cache": true
+  },
+  "cSpell.words": ["exhange", "Farmerce", "kombu", "uselist", "uvicorn"],
+  "python.testing.pytestArgs": ["test"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
+}

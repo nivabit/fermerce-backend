@@ -9,7 +9,7 @@ class IProductSellingUnitBase(pyd.BaseModel):
 
 
 class IProductSellingUnitIn(IProductSellingUnitBase):
-    unit_id: uuid.UUID
+    selling_unit_id: uuid.UUID
     product_id: uuid.UUID
 
 

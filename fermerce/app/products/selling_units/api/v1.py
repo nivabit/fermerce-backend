@@ -29,9 +29,7 @@ async def get_product_detail_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(
-        default="id", description="order by attribute, e.g. id"
-    ),
+    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
     load_related: t.Optional[bool] = False,
 ):
     return await services.filter(
@@ -67,7 +65,5 @@ async def delete_selling_unit(
 
 
 @router.get("/", response_model=t.List[schemas.IProductSellingUnitOut])
-async def get_product_selling_unit(
-    product_id: uuid.UUID, user: User = Depends(require_vendor)
-):
+async def get_product_selling_unit(product_id: uuid.UUID, user: User = Depends(require_vendor)):
     return await services.get_product_selling_units(product_id=product_id, user=user)

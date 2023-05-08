@@ -60,9 +60,7 @@ def get_product_total_price(
     if items:
         for item in items:
             if item.selling_unit.price:
-                price += calculate_discount(
-                    item.selling_unit.price, item.product.property.discount
-                )
+                price += calculate_discount(item.selling_unit.price, item.product.property.discount)
             hard_back_price += item.hard_back_qty * calculate_discount(
                 item.product.property.hard_back_price, item.product.property.discount
             )

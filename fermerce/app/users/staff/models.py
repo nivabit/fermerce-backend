@@ -9,9 +9,7 @@ class Staff(models.Model):
         max_length=10,
         default=f"st-{random_str(5)}",
     )
-    user = fields.OneToOneField(
-        "models.User", on_delete=fields.CASCADE, related_name="staff"
-    )
+    user = fields.OneToOneField("models.User", on_delete=fields.CASCADE, related_name="staff")
     permissions = fields.ManyToManyField(
         "models.Permission",
         related_name="staffs",

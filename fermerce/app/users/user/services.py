@@ -97,9 +97,7 @@ async def filter(
     query = None
     if search_type == SearchType._or:
         query = models.User.filter(
-            Q(is_active=is_active)
-            | Q(is_archived=is_archived)
-            | Q(is_suspended=is_suspended)
+            Q(is_active=is_active) | Q(is_archived=is_archived) | Q(is_suspended=is_suspended)
         )
     else:
         query = models.User.filter(
@@ -164,9 +162,7 @@ async def reset_password_link(
                 else users_obj.username,
             )
         )
-        return IResponseMessage(
-            message="account need to be verified, before reset their password"
-        )
+        return IResponseMessage(message="account need to be verified, before reset their password")
     if not users_obj:
         raise error.NotFoundError("User not found")
     token = security.JWTAUTH.data_encoder(
@@ -265,9 +261,7 @@ async def get_total_users():
 async def get_user(user_id: uuid.UUID, load_related: bool = False) -> models.User:
     query = models.User.filter(id=user_id)
     try:
-        result = await filter_and_single(
-            model=models.User, query=query, load_related=load_related
-        )
+        result = await filter_and_single(model=models.User, query=query, load_related=load_related)
         if not result:
             raise error.NotFoundError("No user with the provided credential")
         if load_related:

@@ -77,10 +77,7 @@ async def update(
         raise error.DuplicateError("shipping address already exists")
     if get_address.state.id == get_address.id:
         result = await get_address.update_from_dict(
-            dict(
-                **data_in.dict(exclude={"state", "phones"}),
-                phones=",".join(data_in.phones)
-            )
+            dict(**data_in.dict(exclude={"state", "phones"}), phones=",".join(data_in.phones))
         )
     else:
         result = await get_address.update_from_dict(

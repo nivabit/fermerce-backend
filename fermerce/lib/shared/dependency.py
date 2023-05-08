@@ -11,9 +11,7 @@ from fermerce.lib.utils import get_api_prefix
 from tortoise.models import Model
 
 
-Oauth_schema = OAuth2PasswordBearer(
-    tokenUrl=f"{get_api_prefix.get_prefix()}/auth/login"
-)
+Oauth_schema = OAuth2PasswordBearer(tokenUrl=f"{get_api_prefix.get_prefix()}/auth/login")
 
 
 class AppAuth:

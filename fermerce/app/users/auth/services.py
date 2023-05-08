@@ -40,9 +40,7 @@ async def login(
         )
 
     get_jwt_data_for_encode = schemas.IToEncode(user_id=str(check_user.id))
-    access_token, refresh_token = JWTAUTH.jwt_encoder(
-        data=get_jwt_data_for_encode.dict()
-    )
+    access_token, refresh_token = JWTAUTH.jwt_encoder(data=get_jwt_data_for_encode.dict())
     if access_token and refresh_token:
         user_ip = models.Auth.get_user_ip(request)
         task.add_task(
@@ -59,9 +57,7 @@ async def login(
 async def login_token_refresh(
     data_in: schemas.IRefreshToken, request: Request, task: BackgroundTasks
 ) -> schemas.IToken:
-    check_auth_token = await models.Auth.get_or_none(
-        refresh_token=data_in.refresh_token
-    )
+    check_auth_token = await models.Auth.get_or_none(refresh_token=data_in.refresh_token)
     if not check_auth_token:
         raise error.UnauthorizedError()
     user_ip: str = models.Auth.get_user_ip(request)
@@ -69,9 +65,7 @@ async def login_token_refresh(
     if check_auth_token.ip_address != user_ip:
         raise error.UnauthorizedError()
     get_jwt_data_for_encode = schemas.IToEncode(user_id=str(check_auth_token.user_id))
-    access_token, refresh_token = JWTAUTH.jwt_encoder(
-        data=get_jwt_data_for_encode.dict()
-    )
+    access_token, refresh_token = JWTAUTH.jwt_encoder(data=get_jwt_data_for_encode.dict())
     if access_token and refresh_token:
         task.add_task(
             create_token,

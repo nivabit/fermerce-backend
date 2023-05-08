@@ -43,9 +43,7 @@ async def filter(
     query = None
     if search_type == SearchType._or:
         query = models.Staff.filter(
-            Q(is_active=is_active)
-            | Q(is_archived=is_archived)
-            | Q(is_suspended=is_suspended)
+            Q(is_active=is_active) | Q(is_archived=is_archived) | Q(is_suspended=is_suspended)
         )
     else:
         query = models.Staff.filter(
@@ -87,9 +85,7 @@ async def remove_staff_data(data_in: schemas.IRemoveStaff) -> None:
 
 async def get_staff_details(user: User, load_related: bool = False):
     query = models.Staff.filter(user=user)
-    result = await filter_and_single(
-        model=models.Staff, query=query, load_related=load_related
-    )
+    result = await filter_and_single(model=models.Staff, query=query, load_related=load_related)
     if not result:
         raise error.NotFoundError("No staff with the provided credential")
     return result
@@ -98,9 +94,7 @@ async def get_staff_details(user: User, load_related: bool = False):
 async def get_staff(staff_id: uuid.UUID, load_related: bool = False):
     query = models.Staff.filter(id=staff_id)
     try:
-        result = await filter_and_single(
-            model=models.Staff, query=query, load_related=load_related
-        )
+        result = await filter_and_single(model=models.Staff, query=query, load_related=load_related)
         if not result:
             raise error.NotFoundError("No staff with the provided credential")
         if load_related:
@@ -130,9 +124,7 @@ async def add_staff_permission(
             existed_perm.append(permission.name)
             get_perms.remove(permission)
     if existed_perm:
-        raise error.DuplicateError(
-            f"Permission `{','.join(existed_perm)}` already exists"
-        )
+        raise error.DuplicateError(f"Permission `{','.join(existed_perm)}` already exists")
     await get_staff.permissions.add(*get_perms)
     return IResponseMessage(message="Staff permission was updated successfully")
 
@@ -140,9 +132,7 @@ async def add_staff_permission(
 async def get_staff_permissions(
     staff_id: uuid.UUID,
 ) -> t.List[Permission]:
-    check_Staff = await models.Staff.get_or_none(id=staff_id).select_related(
-        "permissions"
-    )
+    check_Staff = await models.Staff.get_or_none(id=staff_id).select_related("permissions")
     if check_Staff:
         return await check_Staff.permissions.all()
     raise error.NotFoundError("Staff not found")

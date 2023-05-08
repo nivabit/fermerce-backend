@@ -37,9 +37,7 @@ async def get_promo_code_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(
-        default="id", description="order by attribute, e.g. id"
-    ),
+    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
 ):
     return await services.filter(
         filter_string=filter_string,
@@ -64,9 +62,7 @@ async def update_promo_code(
     data_in: schemas.IProductPromoCodeIn,
     user: User = Depends(require_vendor),
 ) -> schemas.IProductPromoCodeOut:
-    return await services.update(
-        promo_code_id=promo_code_id, data_in=data_in, user=user
-    )
+    return await services.update(promo_code_id=promo_code_id, data_in=data_in, user=user)
 
 
 @router.get("/total/count", response_model=ITotalCount)
@@ -91,7 +87,5 @@ async def remove_product_from_promo_code(
 
 
 @router.delete("/{promo_code_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_promo_code(
-    promo_code_id: uuid.UUID, user: User = Depends(require_vendor)
-) -> None:
+async def delete_promo_code(promo_code_id: uuid.UUID, user: User = Depends(require_vendor)) -> None:
     return await services.delete(promo_code_id=promo_code_id, user=user)

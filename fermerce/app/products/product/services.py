@@ -16,12 +16,8 @@ from fermerce.app.medias.models import Media
 from fermerce.app.users.user.models import User
 
 
-async def create(
-    user: User, data_in: schemas.IProductIn, request: Request
-) -> models.Product:
-    check_product = await models.Product.get_or_none(
-        name=data_in.name, vendor=user.vendor
-    )
+async def create(user: User, data_in: schemas.IProductIn, request: Request) -> models.Product:
+    check_product = await models.Product.get_or_none(name=data_in.name, vendor=user.vendor)
     if check_product:
         raise error.DuplicateError(f"Product with name `{data_in.name}`already  exists")
 
@@ -42,9 +38,7 @@ async def create(
         to_create.update({"cover_media": cover_img})
     new_product = await models.Product.create(**to_create, vendor=user.vendor)
     if data_in.categories:
-        product_categories = await ProductCategory.filter(
-            id__in=data_in.categories
-        ).all()
+        product_categories = await ProductCategory.filter(id__in=data_in.categories).all()
         if product_categories:
             await new_product.categories.add(*product_categories)
 
@@ -69,9 +63,7 @@ async def create(
 async def update(
     user: User, product_id: uuid.UUID, data_in: schemas.IProductIn, request: Request
 ) -> models.Product:
-    check_product = await models.Product.get_or_none(
-        name=data_in.name, vendor=user.vendor
-    )
+    check_product = await models.Product.get_or_none(name=data_in.name, vendor=user.vendor)
     if check_product and check_product.id != product_id:
         raise error.DuplicateError(f"Product with name `{data_in.name}`already  exists")
     if data_in.categories:
@@ -90,23 +82,17 @@ async def update(
         in_stock=data_in.in_stock,
     )
     if data_in.cover_img:
-        check_product_cover_media = await Media.get_or_none(
-            cover_media=check_product.id
-        )
+        check_product_cover_media = await Media.get_or_none(cover_media=check_product.id)
         if check_product_cover_media:
             await check_product_cover_media.delete()
             await Media.create(
-                url=Media.convert_image_name_to_url(
-                    media_url=data_in.cover_img, request=request
-                ),
+                url=Media.convert_image_name_to_url(media_url=data_in.cover_img, request=request),
                 uri=data_in.cover_img,
             )
     if data_in.galleries:
         media_galleries_obj = [
             await Media.create(
-                url=Media.convert_image_name_to_url(
-                    media_url=media_uri, request=request
-                ),
+                url=Media.convert_image_name_to_url(media_url=media_uri, request=request),
                 uri=media_uri,
             )
             for media_uri in data_in.galleries
@@ -124,9 +110,7 @@ async def update(
 
 async def get(slug: str, load_related: bool) -> schemas.IProductOut:
     query = models.Product.filter(slug=slug)
-    result = await filter_and_single(
-        query=query, load_related=load_related, model=models.Product
-    )
+    result = await filter_and_single(query=query, load_related=load_related, model=models.Product)
     if not result:
         raise error.NotFoundError("Product not found")
     return result
@@ -147,9 +131,7 @@ async def filter(
 ) -> t.List[schemas.IProductListOut]:
     query = None
     if search_type == SearchType._or:
-        query = models.Product.filter(
-            Q(in_stock=in_stock) | Q(is_suspended=is_suspended)
-        )
+        query = models.Product.filter(Q(in_stock=in_stock) | Q(is_suspended=is_suspended))
     else:
         query = models.Product.filter(
             Q(in_stock=in_stock),

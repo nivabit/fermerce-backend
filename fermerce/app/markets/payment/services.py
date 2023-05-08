@@ -18,9 +18,7 @@ async def create_payment(
     obj: schemas.IPaymentIn,
     user: User,
 ) -> Response:
-    get_order = await Order.get_or_none(id=obj.order_id, user=user).prefetch_related(
-        "items"
-    )
+    get_order = await Order.get_or_none(id=obj.order_id, user=user).prefetch_related("items")
     if not get_order:
         raise error.NotFoundError("order not found")
     if not get_order.items:
@@ -43,9 +41,7 @@ async def create_payment(
             user=user.dict(),
             redirect_url=f"{config.project_url}/dashboard/payment/{get_order.order_id}",
         )
-        data_out: schemas.IPaymentResponse = await utils.generate_link(
-            data_in=payment_data
-        )
+        data_out: schemas.IPaymentResponse = await utils.generate_link(data_in=payment_data)
         if data_out.status == "success":
             return schemas.IPaymentInitOut(
                 paymentLink=data_out.data_in.link,
@@ -55,9 +51,7 @@ async def create_payment(
 
 
 async def get_payment(payment_id: uuid.UUID, user: User) -> model.Payment:
-    get_payment = await payment_repo.get_by_attr(
-        attr=dict(id=payment_id), load_related=True
-    )
+    get_payment = await payment_repo.get_by_attr(attr=dict(id=payment_id), load_related=True)
     if get_payment and get_payment.order.user_id != user.id:
         raise error.NotFoundError("Payment not found")
     return get_payment
@@ -127,9 +121,7 @@ async def verify_user_payment(
     if get_payment.completed:
         raise error.BadDataError("Invalid payment details was provided")
     try:
-        check_payment: schemas.IPaymentVerifyOut = utils.verify_payment(
-            tx_ref=data_in.reference
-        )
+        check_payment: schemas.IPaymentVerifyOut = utils.verify_payment(tx_ref=data_in.reference)
         if check_payment.error:
             raise error.BadDataError("verification failed")
         get_order = await order_repo.get_by_attr(

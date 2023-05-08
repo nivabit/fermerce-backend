@@ -76,29 +76,19 @@ async def filter_and_list(
             # return results
             for field_name in model._meta.m2m_fields:
                 if hasattr(result, field_name):
-                    items[field_name] = remove_password(
-                        list(getattr(result, field_name))
-                    )
+                    items[field_name] = remove_password(list(getattr(result, field_name)))
             for field_name in model._meta.fk_fields:
                 if getattr(result, field_name):
-                    items[field_name] = remove_password(
-                        dict(getattr(result, field_name))
-                    )
+                    items[field_name] = remove_password(dict(getattr(result, field_name)))
             for field_name in model._meta.o2o_fields:
                 if getattr(result, field_name):
-                    items[field_name] = remove_password(
-                        dict(getattr(result, field_name))
-                    )
+                    items[field_name] = remove_password(dict(getattr(result, field_name)))
             for field_name in model._meta.backward_o2o_fields:
                 if getattr(result, field_name):
-                    items[field_name] = remove_password(
-                        dict(getattr(result, field_name))
-                    )
+                    items[field_name] = remove_password(dict(getattr(result, field_name)))
             for field_name in model._meta.backward_fk_fields:
                 if getattr(result, field_name):
-                    items[field_name] = remove_password(
-                        list(getattr(result, field_name))
-                    )
+                    items[field_name] = remove_password(list(getattr(result, field_name)))
             items.update(remove_password(dict(result)))
             items_list.append(items)
     else:

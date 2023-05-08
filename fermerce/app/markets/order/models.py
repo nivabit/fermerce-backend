@@ -17,9 +17,7 @@ class Order(models.Model):
         unique=True,
     )
     user = fields.ForeignKeyField("models.User", related_name="orders")
-    shipping_address = fields.ForeignKeyField(
-        "models.ShippingAddress", related_name="orders"
-    )
+    shipping_address = fields.ForeignKeyField("models.ShippingAddress", related_name="orders")
     promo_codes = fields.ManyToManyField("models.ProductPromoCode")
     # payment = fields.ForeignKeyField("models.Payment", related_name="order")
     delivery_mode = fields.ForeignKeyField("models.DeliveryMode")

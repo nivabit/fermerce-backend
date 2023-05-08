@@ -1,20 +1,30 @@
 import uuid
 import typing as t
 from fastapi import status
+from tortoise.expressions import Q
 from fermerce.app.products.measuring_unit.models import MeasuringUnit
 from fermerce.app.users.user.models import User
+from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage
+from fermerce.core.services.base import filter_and_list
 from fermerce.lib.errors import error
 from fermerce.app.products.selling_units import schemas, models
 from fermerce.app.products.product.models import Product
 from fastapi import Response
 
 
-async def create(data_in: schemas.IProductSellingUnitIn, user: User) -> models.ProductSellingUnit:
-    get_product = await Product.get_or_none(pk=data_in.product_id, vender=user.vendor)
+async def create(
+    data_in: schemas.IProductSellingUnitIn, user: User
+) -> models.ProductSellingUnit:
+    get_product = await Product.get_or_none(pk=data_in.product_id, vendor=user.vendor)
     if not get_product:
         raise error.NotFoundError("Product not found")
     get_measuring_unit = await MeasuringUnit.get_or_none(id=data_in.unit_id)
+    check_existing_unit = await models.ProductSellingUnit.get_or_none(
+        unit=get_measuring_unit, product=get_product
+    )
+    if check_existing_unit:
+        raise error.DuplicateError("product already exists with this unit")
     if not get_measuring_unit:
         raise error.NotFoundError("measuring unit not found")
     check_existing_unit = await models.ProductSellingUnit.get_or_none(
@@ -35,12 +45,39 @@ async def create(data_in: schemas.IProductSellingUnitIn, user: User) -> models.P
     return IResponseMessage(message="Product measure unit created successfully")
 
 
+async def filter(
+    product_id: uuid.UUID,
+    per_page: int = 10,
+    page: int = 0,
+    select: str = "",
+    load_related: bool = False,
+    sort_by: SortOrder = SortOrder.asc,
+    order_by: str = None,
+) -> t.List[models.ProductSellingUnit]:
+    query = models.ProductSellingUnit
+    if product_id:
+        query = query.filter(product=product_id)
+    results = await filter_and_list(
+        model=models.ProductSellingUnit,
+        query=query,
+        page=page,
+        load_related=load_related,
+        per_page=per_page,
+        select=select,
+        sort_by=sort_by,
+        order_by=order_by,
+    )
+    return results
+
+
 async def get_selling_unit(
     selling_unit_id: uuid.UUID, user: User
 ) -> t.List[models.ProductSellingUnit]:
     get_selling_unit = await models.ProductSellingUnit.get_or_none(
         pk=selling_unit_id, product__vendor=user.vendor
     )
+    if not get_selling_unit:
+        raise error.NotFoundError("product selling unit not found")
     return get_selling_unit
 
 
@@ -53,7 +90,9 @@ async def get_product_selling_units(
     return get_selling_unit
 
 
-async def update(data_in: schemas.IProductSellingUnitIn, user: User) -> models.ProductSellingUnit:
+async def update(
+    data_in: schemas.IProductSellingUnitIn, user: User
+) -> models.ProductSellingUnit:
     selling_unit = await models.ProductSellingUnit.get_or_none(
         product=data_in.product_id, unit=data_in.unit_id, product__vendor=user.vendor
     )
@@ -70,13 +109,12 @@ async def update(data_in: schemas.IProductSellingUnitIn, user: User) -> models.P
 async def delete(
     data_in: schemas.IProductRemoveSellingUnitIn, user: User
 ) -> models.ProductSellingUnit:
-    selling_unit = await models.ProductSellingUnit.get_or_none(
-        product=data_in.product_id, unit=data_in.unit_id, product__vendor=user.vendor
-    )
+    get_product = await Product.get_or_none(id=data_in.product_id, vendor=user.vendor)
+    if not get_product:
+        raise error.NotFoundError("product not found")
+    selling_unit = await models.ProductSellingUnit.filter(
+        product=data_in.product_id, id__in=data_in.selling_unit_ids
+    ).delete()
     if not selling_unit:
-        raise error.NotFoundError("selling unit does not exists for this product")
-    try:
-        await selling_unit.delete()
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-    except:
-        raise error.ServerError("error deleting product selling unit")
+        raise error.NotFoundError("selling unit(s) does not exists for this product")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

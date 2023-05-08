@@ -11,7 +11,9 @@ from fermerce.lib.utils import get_api_prefix
 from tortoise.models import Model
 
 
-Oauth_schema = OAuth2PasswordBearer(tokenUrl=f"{get_api_prefix.get_prefix()}/auth/login")
+Oauth_schema = OAuth2PasswordBearer(
+    tokenUrl=f"{get_api_prefix.get_prefix()}/auth/login"
+)
 
 
 class AppAuth:
@@ -78,7 +80,6 @@ class AppWrite(t.Generic[ModelType]):
             )
             get_user = get_user.prefetch_related(*to_pre_fetch)
             get_user = await get_user
-            print(get_user)
             if (
                 get_user
                 and get_user.is_verified
@@ -87,6 +88,7 @@ class AppWrite(t.Generic[ModelType]):
             ):
                 if get_user:
                     return get_user
+
                 raise error.ForbiddenError("Authorization failed")
         return error.UnauthorizedError("Authorization failed")
 

@@ -2,21 +2,12 @@ import uuid
 from tortoise import fields, models
 from fermerce.app.business.vendor.models import Vendor
 from fermerce.app.products.category.models import ProductCategory
+from fermerce.app.products.product_detail.models import ProductDetail
 from fermerce.app.products.selling_units.models import ProductSellingUnit
 from fermerce.app.products.promo_code.models import ProductPromoCode
 
 
 from fermerce.lib.utils.random_string import random_str
-
-
-class ProductDetail(models.Model):
-    class Meta:
-        table = "product_detail"
-
-    id = fields.UUIDField(pk=True, index=True)
-    title = fields.CharField(max_length=50, null=False)
-    description = fields.TextField(null=False)
-    product = fields.ForeignKeyField("models.Product", related_name="details")
 
 
 class Product(models.Model):
@@ -35,7 +26,9 @@ class Product(models.Model):
         default=f"PR-{str(uuid.uuid4()).split('-')[-1]}",
         unique=True,
     )
-    cover_media = fields.ForeignKeyField("models.Media", related_name="cover_media", null=True)
+    cover_media = fields.ForeignKeyField(
+        "models.Media", related_name="cover_media", null=True
+    )
     galleries = fields.ManyToManyField(
         "models.Media",
         related_name="product_galleries",

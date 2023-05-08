@@ -3,6 +3,9 @@ from fermerce.lib.utils import get_api_prefix
 
 from fermerce.app.users.user.api.v1 import router as users_api_router
 from fermerce.app.products.product.api.v1 import router as products_api_router
+from fermerce.app.products.product_detail.api.v1 import (
+    router as product_details_api_router,
+)
 from fermerce.app.users.auth.api.v1 import router as auth_api_router
 from fermerce.app.products.category.api.v1 import router as category_api_router
 from fermerce.app.markets.country.api.v1 import router as country_api_router
@@ -29,15 +32,16 @@ from fermerce.app.markets.tracking.api.v1 import router as tracking_api_router
 router = APIRouter(prefix=get_api_prefix.get_prefix())
 router.include_router(router=users_api_router)
 router.include_router(router=auth_api_router)
+router.include_router(router=shipping_address_api_router)
 router.include_router(router=country_api_router)
 router.include_router(router=state_api_router)
 router.include_router(router=status_api_router)
 router.include_router(router=category_api_router)
 router.include_router(router=measurement_unit_api_router)
-router.include_router(router=shipping_address_api_router)
+router.include_router(router=products_api_router)
+router.include_router(router=product_details_api_router)
 router.include_router(router=selling_units_router)
 router.include_router(router=promotion_code_api_router)
-router.include_router(router=products_api_router)
 router.include_router(router=business_api_router)
 router.include_router(router=medias_api_router)
 router.include_router(router=cart_api_router)

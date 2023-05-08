@@ -2,6 +2,7 @@ import typing as t
 import uuid
 from fastapi import APIRouter, Depends, Query, status
 from fermerce.app.products.measuring_unit import services
+from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import ITotalCount
 from fermerce.app.products.measuring_unit import schemas
 from fermerce.app.users.staff.dependency import require_super_admin_or_admin
@@ -26,15 +27,29 @@ async def create_measuring_unit(data_in: schemas.IMeasuringUnitIn):
 )
 async def get_measuring_unit_list(
     filter_string: t.Optional[str] = Query(
-        default="", alias="filter", description="filter all unit"
+        default="", alias="filter", description="filter all shipping_address"
+    ),
+    select: t.Optional[str] = Query(
+        default="",
+        alias="select",
+        description="specific attributes of the categories",
     ),
     per_page: int = 10,
     page: int = 1,
+    sort_by: t.Optional[SortOrder] = Query(
+        default=SortOrder.desc, description="order by attribute, e.g. id"
+    ),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
 ):
-    return await services.pro(
+    return await services.filter(
         filter_string=filter_string,
         per_page=per_page,
         page=page,
+        sort_by=sort_by,
+        order_by=order_by,
+        select=select,
     )
 
 

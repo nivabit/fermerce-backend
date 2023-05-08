@@ -16,8 +16,8 @@ class IDeliveryModeIn(pyd.BaseModel):
 
 class IDeliveryModeOut(pyd.BaseModel):
     id: t.Optional[uuid.UUID]
-    name: str
-    price: pyd.condecimal(max_digits=12, decimal_places=2)
+    name: t.Optional[str]
+    price: t.Optional[pyd.condecimal(max_digits=12, decimal_places=2)]
     created_at: t.Optional[datetime.datetime]
     updated_at: t.Optional[datetime.datetime]
 

@@ -6,6 +6,7 @@ from fastapi import Response
 from tortoise.expressions import Q
 from fermerce.core.enum.sort_type import SortOrder, SearchType
 from fermerce.core.schemas.response import ITotalCount, IResponseMessage
+from fermerce.core.services.base import filter_and_list, filter_and_single
 from fermerce.taskiq.user import tasks
 from fermerce.lib.errors import error
 from fermerce.app.users.user import schemas, models
@@ -93,14 +94,12 @@ async def filter(
     is_archived: bool = False,
     search_type: SearchType = SearchType._and,
 ) -> t.List[models.User]:
-    offset = (page - 1) * per_page
-    limit = per_page
-
-    # Query the model with the filter and pagination parameters.
     query = None
     if search_type == SearchType._or:
         query = models.User.filter(
-            Q(is_active=is_active) | Q(is_archived=is_archived) | Q(is_suspended=is_suspended)
+            Q(is_active=is_active)
+            | Q(is_archived=is_archived)
+            | Q(is_suspended=is_suspended)
         )
     else:
         query = models.User.filter(
@@ -109,44 +108,24 @@ async def filter(
             Q(is_archived=is_archived),
             Q(is_suspended=is_suspended),
         )
-    results = await models.User.filter()
-
-    query = query.all().offset(offset).limit(limit)
-    if sort_by == SortOrder.asc and bool(order_by):
-        query = query.order_by(
-            *[f"-{col}" for col in order_by.split(",") if col in models.User._meta.fields]
+    if filter_string:
+        query = query.filter(
+            Q(firstname__icontains=filter_string)
+            | Q(lastname__icontains=filter_string)
+            | Q(email__icontains=filter_string)
+            | Q(username__icontains=filter_string)
         )
-    elif sort_by == SortOrder.desc and bool(order_by):
-        query = query.order_by(
-            *[f"{col}" for col in order_by.split(",") if col in models.User._meta.fields]
-        )
-    else:
-        query = query.order_by("-id")
-    if select:
-        query = query.values(
-            *[col.strip() for col in select.split(",") if col.strip() in models.User._meta.fields]
-        )
-    if load_related:
-        select_list = []
-        if models.Staff._meta.fk_fields:
-            select_list = select_list.extend(models.Staff._meta.fk_fields)
-        elif models.Staff._meta.m2m_fields:
-            select_list = select_list.extend(models.Staff._meta.m2m_fields)
-
-        query = query.select_related(select_list)
-    results = await query
-    # Count the total number of results with the same filter.
-
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-
-    # Return the pagination information and results as a dictionary
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+    result = await filter_and_list(
+        model=models.User,
+        query=query,
+        page=page,
+        load_related=load_related,
+        per_page=per_page,
+        select=select,
+        sort_by=sort_by,
+        order_by=order_by,
+    )
+    return result
 
 
 async def verify_users_email(
@@ -185,7 +164,9 @@ async def reset_password_link(
                 else users_obj.username,
             )
         )
-        return IResponseMessage(message="account need to be verified, before reset their password")
+        return IResponseMessage(
+            message="account need to be verified, before reset their password"
+        )
     if not users_obj:
         raise error.NotFoundError("User not found")
     token = security.JWTAUTH.data_encoder(
@@ -282,22 +263,19 @@ async def get_total_users():
 
 
 async def get_user(user_id: uuid.UUID, load_related: bool = False) -> models.User:
-    if not user_id:
-        raise error.NotFoundError(
-            f"User with  user id {user_id} does not exist",
+    query = models.User.filter(id=user_id)
+    try:
+        result = await filter_and_single(
+            model=models.User, query=query, load_related=load_related
         )
-    use_detail = await models.User.get_or_none(id=user_id)
-    if use_detail:
-        try:
-            if not load_related:
-                use_detail = await use_detail.fetch_related(models.User._meta.fields)
-                return schemas.IUserOut.from_orm(use_detail)
-            return schemas.IUserOutFull.from_orm(use_detail)
-        except Exception:
-            raise error.ServerError("Error getting  user data")
-    raise error.NotFoundError(
-        f"User with id {user_id} does not exist",
-    )
+        if not result:
+            raise error.NotFoundError("No user with the provided credential")
+        if load_related:
+            # return schemas.IUserFullOut(**result)
+            return result
+        return result
+    except Exception as e:
+        raise error.ServerError(f"Error getting user data {e}")
 
 
 async def check_user_email(data_in: schemas.ICheckUserEmail) -> IResponseMessage:

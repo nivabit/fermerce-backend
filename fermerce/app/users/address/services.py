@@ -5,6 +5,7 @@ from tortoise.expressions import Q
 from fermerce.app.markets.state.models import State
 from fermerce.app.users.user.models import User
 from fermerce.core.enum.sort_type import SortOrder
+from fermerce.core.services.base import filter_and_list, filter_and_single
 from fermerce.lib.errors import error
 from fermerce.app.users.address import schemas, models
 
@@ -26,7 +27,10 @@ async def create(
     if check_address:
         raise error.DuplicateError("Address already exists")
     new_address = await models.ShippingAddress.create(
-        **data_in.dict(exclude={"state"}), user=user, state=get_state
+        **data_in.dict(exclude={"state", "phones"}),
+        user=user,
+        state=get_state,
+        phones=",".join(data_in.phones)
     )
     if new_address:
         return new_address
@@ -36,13 +40,17 @@ async def create(
 async def get(
     address_id: uuid.UUID,
     user: User,
+    load_related: bool = False,
 ) -> models.ShippingAddress:
-    get_address = await models.ShippingAddress.get_or_none(
-        id=address_id, user=user
-    ).prefetch_related("state")
-    if not get_address:
+    query = models.ShippingAddress.filter(id=address_id, user=user)
+    result = await filter_and_single(
+        model=models.ShippingAddress,
+        query=query,
+        load_related=load_related,
+    )
+    if not result:
         raise error.NotFoundError("Shipping address not found")
-    return get_address
+    return result
 
 
 async def update(
@@ -68,10 +76,19 @@ async def update(
     if check_if_exist and check_if_exist.id != address_id:
         raise error.DuplicateError("shipping address already exists")
     if get_address.state.id == get_address.id:
-        result = await get_address.update_from_dict(dict(**data_in.dict(exclude="state")))
+        result = await get_address.update_from_dict(
+            dict(
+                **data_in.dict(exclude={"state", "phones"}),
+                phones=",".join(data_in.phones)
+            )
+        )
     else:
         result = await get_address.update_from_dict(
-            dict(**data_in.dict(exclude="state"), state=get_state)
+            dict(
+                **data_in.dict(exclude={"state", "phones"}),
+                state=get_state,
+                phones=",".join(data_in.phones)
+            )
         )
     try:
         await get_address.save()
@@ -87,6 +104,7 @@ async def filter(
     page: int = 0,
     sort_by: SortOrder = SortOrder.asc,
     order_by: str = None,
+    load_related: bool = False,
 ) -> t.List[models.ShippingAddress]:
     query = models.ShippingAddress
     if filter_string:
@@ -98,27 +116,15 @@ async def filter(
             user=user,
         )
 
-    to_order_by = []
-    if sort_by == SortOrder.asc and order_by:
-        for el in order_by.split(","):
-            if hasattr(models.ShippingAddress, el):
-                to_order_by.append(f"-{el}")
-    elif sort_by == SortOrder.desc and order_by:
-        for el in order_by.split(","):
-            if hasattr(models.ShippingAddress, el):
-                to_order_by.append(el)
-    query = query.order_by(*to_order_by).prefetch_related("state")
-    offset = (page - 1) * per_page
-    limit = per_page
-    results = await query.limit(limit).offset(offset).all()
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+    return await filter_and_list(
+        query=query,
+        model=models.ShippingAddress,
+        per_page=per_page,
+        page=page,
+        sort_by=sort_by,
+        order_by=order_by,
+        load_related=load_related,
+    )
 
 
 async def get_total_count(user: User) -> dict:
@@ -133,5 +139,5 @@ async def delete(
     get_address = await models.ShippingAddress.get_or_none(id=address_id, user=user)
     if not get_address:
         raise error.NotFoundError("Shipping address not found")
-    await get_address.delete(address_id)
+    await get_address.delete()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

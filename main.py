@@ -2,9 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fermerce.core.settings import config
 from fermerce.lib.db.config import register_tortoise_to_fastapi
-
-# from fermerce.taskiq.broker import broker
-from fermerce.lib.middleware.exclude_data_from_response import exclude_keys_middleware
 from fermerce.lib.middleware.response_formatter import response_data_transformer
 from fermerce.core.router import v1, admin_v1
 from fermerce.core.schemas.response import IHealthCheck
@@ -32,7 +29,7 @@ def get_application():
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    # _app.middleware("http")(exclude_keys_middleware(["password", "reset_token"]))
+
     # _app.middleware("http")(response_data_transformer)
 
     return _app

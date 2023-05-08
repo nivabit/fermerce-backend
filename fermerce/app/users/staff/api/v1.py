@@ -3,6 +3,9 @@ import uuid
 from fastapi import APIRouter, Depends, Query, status
 from fermerce.app.users.permission.schemas import IPermissionOut
 from fermerce.app.users.staff import schemas, services, dependency
+from fermerce.app.users.user.dependency import require_staff, require_user
+from fermerce.app.users.user.models import User
+
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage, ITotalCount
 from fermerce.core.enum.sort_type import SearchType
@@ -21,7 +24,7 @@ async def create_staff(data_in: schemas.IStaffIn) -> IResponseMessage:
     return await services.create(data_in=data_in)
 
 
-@router.get("/", status_code=status.HTTP_200_OK)
+@router.get("/", status_code=status.HTTP_200_OK, response_model=schemas.IStaffOutList)
 async def get_staff_list(
     filter_string: t.Optional[str] = Query(
         default="", alias="filter", description="filter through all attributes"
@@ -34,7 +37,9 @@ async def get_staff_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
     is_active: t.Optional[bool] = True,
     is_suspended: t.Optional[bool] = False,
     is_archived: t.Optional[bool] = False,
@@ -107,14 +112,21 @@ async def delete_staff(data_in: schemas.IRemoveStaff) -> None:
     return await services.remove_staff_data(data_in)
 
 
+@router.get("/details", status_code=status.HTTP_200_OK)
+async def get_single_staff(
+    user: User = Depends(require_user),
+    load_related: bool = False,
+):
+    return await services.get_staff_details(user=user, load_related=load_related)
+
+
 @router.get(
-    "/{staff_id}",
-    response_model=t.Union[schemas.IStaffOutFull, schemas.IStaffOut],
+    "/{staff_id}/details",
     status_code=status.HTTP_200_OK,
-    # dependencies=[Depends(dependency.require_super_admin_or_admin)],
+    dependencies=[Depends(dependency.require_super_admin_or_admin)],
 )
 async def get_single_staff(
     staff_id: uuid.UUID,
     load_related: bool = False,
-) -> t.Union[schemas.IStaffOutFull, schemas.IStaffOut]:
-    return await services.get_staff_details(staff_id, load_related)
+):
+    return await services.get_staff(staff_id, load_related)

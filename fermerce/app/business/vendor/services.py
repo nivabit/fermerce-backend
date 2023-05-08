@@ -12,6 +12,7 @@ from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import ITotalCount, IResponseMessage
 from fermerce.app.users.user.models import User
 from fermerce.core.enum.sort_type import SearchType
+from fermerce.core.services.base import filter_and_list
 from fermerce.lib.errors import error
 from fermerce.app.business.vendor import schemas, models
 
@@ -20,7 +21,9 @@ async def create(user: User, request: Request, data_in=schemas.IVendorIn):
     check_vendor = await models.Vendor.get_or_none(user=user.id)
     if check_vendor:
         raise error.BadDataError("Business account already exist")
-    check_business_name = await models.Vendor.get_or_none(business_name=data_in.business_name)
+    check_business_name = await models.Vendor.get_or_none(
+        business_name=data_in.business_name
+    )
     if check_business_name:
         raise error.BadDataError("Business account already")
     to_create = dict(business_name=data_in.business_name)
@@ -47,14 +50,20 @@ async def create(user: User, request: Request, data_in=schemas.IVendorIn):
     raise error.ServerError("Error creating business account")
 
 
-async def update(vendor_id: uuid.UUID, user: User, request: Request, data_in=schemas.IVendorIn):
+async def update(
+    vendor_id: uuid.UUID, user: User, request: Request, data_in=schemas.IVendorIn
+):
     check_vendor = await models.Vendor.get_or_none(user=user.id)
     if not check_vendor:
         raise error.NotFoundError("Business Not found")
-    check_business_name = await models.Vendor.get_or_none(business_name=data_in.business_name)
+    check_business_name = await models.Vendor.get_or_none(
+        business_name=data_in.business_name
+    )
     if check_vendor.id != check_business_name.id:
         if check_business_name:
-            raise error.BadDataError(f"Business with name {data_in.business_name} already")
+            raise error.BadDataError(
+                f"Business with name {data_in.business_name} already"
+            )
     to_update = dict(business_name=data_in.business_name)
     if data_in.logo:
         logo = await Media.create(
@@ -95,14 +104,12 @@ async def filter(
     is_archived: bool = False,
     search_type: SearchType = SearchType._and,
 ) -> t.List[models.Vendor]:
-    offset = (page - 1) * per_page
-    limit = per_page
-
-    # Query the model with the filter and pagination parameters.
     query = None
     if search_type == SearchType._or:
         query = models.Vendor.filter(
-            Q(is_active=is_active) | Q(is_archived=is_archived) | Q(is_suspended=is_suspended)
+            Q(is_active=is_active)
+            | Q(is_archived=is_archived)
+            | Q(is_suspended=is_suspended)
         )
     else:
         query = models.Vendor.filter(
@@ -111,73 +118,16 @@ async def filter(
             Q(is_archived=is_archived),
         )
 
-    query = query.all().offset(offset).limit(limit)
-    if sort_by == SortOrder.asc and bool(order_by):
-        query = query.order_by(
-            *[f"-{col}" for col in order_by.split(",") if col in models.Vendor._meta.fields]
-        )
-    elif sort_by == SortOrder.desc and bool(order_by):
-        query = query.order_by(
-            *[f"{col}" for col in order_by.split(",") if col in models.Vendor._meta.fields]
-        )
-    else:
-        query = query.order_by("-id")
-    to_pre_fetch = set.union(
-        models.Vendor._meta.m2m_fields,
-        models.Vendor._meta.fk_fields,
-        models.Vendor._meta.o2o_fields,
-        models.Vendor._meta.backward_o2o_fields,
-        models.Vendor._meta.backward_fk_fields,
+    return await filter_and_list(
+        model=models.Vendor,
+        query=query,
+        page=page,
+        load_related=load_related,
+        per_page=per_page,
+        select=select,
+        sort_by=sort_by,
+        order_by=order_by,
     )
-
-    if load_related:
-        query = query.prefetch_related(*to_pre_fetch)
-    if select:
-        query = query.values(
-            *[
-                col.strip()
-                for col in select.split(",")
-                if col.strip() in models.Vendor._meta.fields and col.strip() not in to_pre_fetch
-            ]
-        )
-    results = await query
-    items_list = []
-    items = {}
-    if load_related and results and not select:
-        for result in results:
-            # return results
-            for field_name in models.Vendor._meta.m2m_fields:
-                if hasattr(result, field_name):
-                    items[field_name] = list(getattr(result, field_name))
-            for field_name in models.Vendor._meta.fk_fields:
-                if getattr(result, field_name):
-                    items[field_name] = dict(getattr(result, field_name))
-            for field_name in models.Vendor._meta.o2o_fields:
-                if getattr(result, field_name):
-                    items[field_name] = dict(getattr(result, field_name))
-            for field_name in models.Vendor._meta.backward_o2o_fields:
-                if getattr(result, field_name):
-                    items[field_name] = dict(getattr(result, field_name))
-            for field_name in models.Vendor._meta.backward_fk_fields:
-                print([dict(item) for item in list(getattr(result, field_name))])
-                if getattr(result, field_name):
-                    items[field_name] = list(getattr(result, field_name))
-            items.update(dict(result))
-            items_list.append(items)
-    results = [schemas.IVendorOutFull(**item) for item in items_list]
-
-    # Count the total number of results with the same filter.
-
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-
-    # Return the pagination information and results as a dictionary
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(items_list),
-        "results": items_list,
-    }
 
 
 async def remove_vendor_data(data_in: schemas.IRemoveVendor) -> None:
@@ -186,13 +136,17 @@ async def remove_vendor_data(data_in: schemas.IRemoveVendor) -> None:
         if data_in.permanent:
             await vendor_to_remove.delete()
         else:
-            await vendor_to_remove.update_from_dict(dict(is_active=False, archived=True))
+            await vendor_to_remove.update_from_dict(
+                dict(is_active=False, archived=True)
+            )
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    raise error.NotFoundError(f"Vendor with vendor_id {data_in.vendor_id} does not exist")
+    raise error.NotFoundError(
+        f"Vendor with vendor_id {data_in.vendor_id} does not exist"
+    )
 
 
 async def get_vendor_details(vendor_id: str, load_related: bool = False):
-    query = models.Vendor.get_or_none(id=vendor_id)
+    query = models.Vendor.filter(id=vendor_id)
     if load_related:
         to_pre_fetch = set.union(
             models.Vendor._meta.m2m_fields,
@@ -214,7 +168,8 @@ async def get_vendor_details(vendor_id: str, load_related: bool = False):
     if result and load_related:
         items = {
             field_name: list(getattr(result, field_name))
-            if hasattr(result, field_name) and field_name in models.Vendor._meta.m2m_fields
+            if hasattr(result, field_name)
+            and field_name in models.Vendor._meta.m2m_fields
             else dict(getattr(result, field_name))
             if field_name in models.Vendor._meta.fk_fields
             or field_name in models.Vendor._meta.o2o_fields

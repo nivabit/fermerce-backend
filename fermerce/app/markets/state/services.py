@@ -3,6 +3,7 @@ import typing as t
 from fastapi import status
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import ITotalCount
+from fermerce.core.services.base import filter_and_list
 from fermerce.lib.errors import error
 from fermerce.app.markets.state import schemas, models
 from fastapi import Response
@@ -39,24 +40,19 @@ async def filter(
     sort_by: SortOrder = SortOrder.asc,
     order_by: str = None,
 ) -> t.List[models.State]:
-    offset = (page - 1) * per_page
-    limit = per_page
-
-    # Query the model with the filter and pagination parameters.
-    results = await models.State.all().offset(offset).limit(limit)
-
-    # Count the total number of results with the same filter.
-
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-
-    # Return the pagination information and results as a dictionary
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+    query = models.State
+    if filter_string:
+        query = query.filter(name__icontains=filter_string)
+    results = await filter_and_list(
+        model=models.State,
+        query=query,
+        select=select,
+        sort_by=sort_by,
+        order_by=order_by,
+        page=page,
+        per_page=per_page,
+    )
+    return results
 
 
 async def get_total_count() -> ITotalCount:

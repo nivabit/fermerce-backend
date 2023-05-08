@@ -1,7 +1,9 @@
 import uuid
 import typing as t
 from fastapi import status
+from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import ITotalCount
+from fermerce.core.services.base import filter_and_list
 from fermerce.lib.errors import error
 from fermerce.app.products.measuring_unit import schemas, models
 from fastapi import Response
@@ -32,21 +34,23 @@ async def filter(
     filter_string: str,
     per_page: int = 10,
     page: int = 0,
+    select: str = None,
+    order_by: str = None,
+    sort_by: SortOrder = SortOrder.asc,
 ) -> t.List[models.MeasuringUnit]:
     query = models.MeasuringUnit
     if filter_string:
         query = query.filter(unit__icontains=filter_string)
-    offset = (page - 1) * per_page
-    limit = per_page
-    results = await query.all().offset(offset).limit(limit)
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+    results = await filter_and_list(
+        model=models.MeasuringUnit,
+        query=query,
+        per_page=per_page,
+        page=page,
+        select=select,
+        sort_by=sort_by,
+        order_by=order_by,
+    )
+    return results
 
 
 async def get_total_count() -> ITotalCount:
@@ -66,7 +70,8 @@ async def update(
         raise error.DuplicateError("measuring unit already exists")
     elif check_unit and check_unit.unit == check_measuring_unit.unit:
         return check_measuring_unit
-    await models.MeasuringUnit.filter(id=unit_id).update(**data_in.dict())
+    check_measuring_unit.update_from_dict(data_in.dict())
+    await check_measuring_unit.save()
     return check_measuring_unit
 
 

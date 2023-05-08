@@ -13,7 +13,7 @@ router = APIRouter(prefix="/vendors", tags=["Vendors"])
 
 @router.get(
     "/",
-    # response_model_exclude_unset=True,
+    response_model=schemas.IVendorListOut
     # dependencies=[Depends(dependency.require_super_admin_or_admin)],
 )
 async def get_users_list(
@@ -28,7 +28,9 @@ async def get_users_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
     is_active: t.Optional[bool] = True,
     is_suspended: t.Optional[bool] = False,
     is_archived: t.Optional[bool] = False,

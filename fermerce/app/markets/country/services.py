@@ -3,10 +3,10 @@ import typing as t
 from fastapi import status
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import ITotalCount
+from fermerce.core.services.base import filter_and_list
 from fermerce.lib.errors import error
 from fermerce.app.markets.country import schemas, models
 from fastapi import Response
-from tortoise.expressions import Q
 
 
 # create permission
@@ -40,37 +40,19 @@ async def filter(
     sort_by: SortOrder = SortOrder.asc,
     order_by: str = None,
 ) -> t.List[models.Country]:
-    offset = (page - 1) * per_page
-    limit = per_page
-
-    # Construct a Q object to filter the results by the filter string.
-    # filter_q = Q()
-
-    # for field in models.Country._meta.fields_map.values():
-    #     if field.internal:
-    #         continue
-    #     if field.unique:
-    #         filter_q |= Q(**{f"{field.name}": filter_string})
-    #     elif field.__class__.__name__ == "TextField":
-    #         filter_q |= Q(**{f"{field.name}__icontains": filter_string})
-    #     elif field.__class__.__name__ in ["CharField", "ForeignKeyField"]:
-    #         filter_q |= Q(**{f"{field.name}__icontains": filter_string})
-
-    # Query the model with the filter and pagination parameters.
-    results = await models.Country.all().offset(offset).limit(limit)
-
-    # Count the total number of results with the same filter.
-
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-
-    # Return the pagination information and results as a dictionary
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+    query = models.Country
+    if filter_string:
+        query = query.filter(name__icontains=filter_string)
+    result = await filter_and_list(
+        model=models.Country,
+        query=query,
+        per_page=per_page,
+        page=page,
+        select=select,
+        order_by=order_by,
+        sort_by=sort_by,
+    )
+    return result
 
 
 async def get_total_count() -> ITotalCount:

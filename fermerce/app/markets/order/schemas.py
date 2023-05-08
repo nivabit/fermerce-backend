@@ -27,7 +27,7 @@ class IOrderItemsOut(pyd.BaseModel):
     tracking_id: str
     quantity: int
     status: t.List[state_schema.IStateIn] = []
-    product: product_schema.IProductShortInfo
+    # product: product_schema.IProductShortInfo
     selling_unit: selling_unit_schema.IProductSellingUnitIn
 
 
@@ -44,6 +44,11 @@ class IOrderIn(pyd.BaseModel):
 class IOrderUpdate(pyd.BaseModel):
     tracking_id: str
     status_id: uuid.UUID
+
+
+class IOrderUpdatePromoCodeIn(pyd.BaseModel):
+    order_id: uuid.UUID
+    promo_code_id: uuid.UUID
 
 
 class IOrderItemUpdate(pyd.BaseModel):

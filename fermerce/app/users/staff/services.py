@@ -8,6 +8,7 @@ from fermerce.core.schemas.response import ITotalCount, IResponseMessage
 from fermerce.app.users.user.models import User
 from fermerce.app.users.permission.models import Permission
 from fermerce.core.enum.sort_type import SearchType
+from fermerce.core.services.base import filter_and_list, filter_and_single
 from fermerce.lib.errors import error
 from fermerce.app.users.staff import schemas, models
 
@@ -15,8 +16,7 @@ from fermerce.app.users.staff import schemas, models
 async def create(
     data_in=schemas.IStaffIn,
 ):
-    check_user = await User.get_or_none(id=str(data_in.user_id)).select_related("staff")
-
+    check_user = await User.get_or_none(id=data_in.user_id).select_related("staff")
     if not check_user:
         raise error.NotFoundError("User not found")
     if check_user.staff:
@@ -40,14 +40,12 @@ async def filter(
     is_archived: bool = False,
     search_type: SearchType = SearchType._and,
 ) -> t.List[models.Staff]:
-    offset = (page - 1) * per_page
-    limit = per_page
-
-    # Query the model with the filter and pagination parameters.
     query = None
     if search_type == SearchType._or:
         query = models.Staff.filter(
-            Q(is_active=is_active) | Q(is_archived=is_archived) | Q(is_suspended=is_suspended)
+            Q(is_active=is_active)
+            | Q(is_archived=is_archived)
+            | Q(is_suspended=is_suspended)
         )
     else:
         query = models.Staff.filter(
@@ -56,48 +54,28 @@ async def filter(
             Q(is_archived=is_archived),
             Q(is_suspended=is_suspended),
         )
-    results = await models.Staff.filter()
-
-    query = query.all().offset(offset).limit(limit)
-    if sort_by == SortOrder.asc and bool(order_by):
-        query = query.order_by(
-            *[f"-{col}" for col in order_by.split(",") if col in models.Staff._meta.fields]
+    if filter_string:
+        query = query.filter(
+            Q(staff_id__icontains=filter_string)
+            | Q(permissions__name__icontains=filter_string)
+            | Q(user__lastname__icontains=filter_string)
+            | Q(user__email__icontains=filter_string),
         )
-    elif sort_by == SortOrder.desc and bool(order_by):
-        query = query.order_by(
-            *[f"{col}" for col in order_by.split(",") if col in models.Staff._meta.fields]
-        )
-    else:
-        query = query.order_by("-id")
-    if select:
-        query = query.values(
-            *[col.strip() for col in select.split(",") if col.strip() in models.Staff._meta.fields]
-        )
-        if load_related:
-            select_list = []
-            if models.Staff._meta.fk_fields:
-                select_list = select_list.extend(",".join(models.Staff._meta.fk_fields))
-            elif models.Staff._meta.m2m_fields:
-                select_list = select_list.extend(",".join(models.Staff._meta.m2m_fields))
-            query = query.select_related(select_list)
-    results = await query
 
-    # Count the total number of results with the same filter.
-
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-
-    # Return the pagination information and results as a dictionary
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+    return await filter_and_list(
+        model=models.Staff,
+        query=query,
+        page=page,
+        load_related=load_related,
+        per_page=per_page,
+        select=select,
+        sort_by=sort_by,
+        order_by=order_by,
+    )
 
 
 async def remove_staff_data(data_in: schemas.IRemoveStaff) -> None:
-    staff_to_remove = await models.Staff.get_or_none(data_in.staff_id)
+    staff_to_remove = await models.Staff.get_or_none(id=data_in.staff_id)
     if staff_to_remove:
         if data_in.permanent:
             await staff_to_remove.delete()
@@ -107,24 +85,29 @@ async def remove_staff_data(data_in: schemas.IRemoveStaff) -> None:
     raise error.NotFoundError(f"Staff with staff_id {data_in.staff_id} does not exist")
 
 
-async def get_staff_details(
-    staff_id: str, load_related: bool = False
-) -> t.Union[schemas.IStaffOutFull, schemas.IStaffOut]:
-    query = models.Staff.get_or_none(id=staff_id)
-    if load_related:
-        query = query.prefetch_related(
-            ",".join(models.Staff._meta.o2o_fields),
-            ",".join(models.Staff._meta.m2m_fields),
-        )
-    staff = await query
-    try:
-        if load_related:
-            return schemas.IStaffOutFull.from_orm(staff)
-        return schemas.IStaffOut.from_orm(staff)
+async def get_staff_details(user: User, load_related: bool = False):
+    query = models.Staff.filter(user=user)
+    result = await filter_and_single(
+        model=models.Staff, query=query, load_related=load_related
+    )
+    if not result:
+        raise error.NotFoundError("No staff with the provided credential")
+    return result
 
+
+async def get_staff(staff_id: uuid.UUID, load_related: bool = False):
+    query = models.Staff.filter(id=staff_id)
+    try:
+        result = await filter_and_single(
+            model=models.Staff, query=query, load_related=load_related
+        )
+        if not result:
+            raise error.NotFoundError("No staff with the provided credential")
+        if load_related:
+            return schemas.IStaffOutFull(**result)
+        return result
     except Exception as e:
-        raise error.ServerError(f"Error getting staff data {str(e)}")
-    raise error.NotFoundError("No staff with the provided credential")
+        raise error.ServerError(f"Error getting staff data {e}")
 
 
 async def get_total_Staffs():
@@ -147,7 +130,9 @@ async def add_staff_permission(
             existed_perm.append(permission.name)
             get_perms.remove(permission)
     if existed_perm:
-        raise error.DuplicateError(f"Permission `{','.join(existed_perm)}` already exists")
+        raise error.DuplicateError(
+            f"Permission `{','.join(existed_perm)}` already exists"
+        )
     await get_staff.permissions.add(*get_perms)
     return IResponseMessage(message="Staff permission was updated successfully")
 
@@ -155,7 +140,9 @@ async def add_staff_permission(
 async def get_staff_permissions(
     staff_id: uuid.UUID,
 ) -> t.List[Permission]:
-    check_Staff = await models.Staff.get_or_none(id=staff_id).select_related("permissions")
+    check_Staff = await models.Staff.get_or_none(id=staff_id).select_related(
+        "permissions"
+    )
     if check_Staff:
         return await check_Staff.permissions.all()
     raise error.NotFoundError("Staff not found")

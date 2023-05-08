@@ -13,7 +13,7 @@ class ICartIn(pyd.BaseModel):
 class ICartOut(pyd.BaseModel):
     id: uuid.UUID
     quantity: int = 1
-    product: product_schema.IProductLongInfo
+    # product: product_schema.IProductLongInfo
 
     class Config:
         orm_mode = True

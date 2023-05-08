@@ -3,6 +3,7 @@ import typing as t
 from fastapi import status
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import ITotalCount
+from fermerce.core.services.base import filter_and_list
 from fermerce.lib.errors import error
 from fermerce.app.users.permission import schemas, models
 from fastapi import Response
@@ -39,17 +40,19 @@ async def filter(
     sort_by: SortOrder = SortOrder.asc,
     order_by: str = None,
 ) -> t.List[models.Permission]:
-    offset = (page - 1) * per_page
-    limit = per_page
-    results = await models.Permission.all().offset(offset).limit(limit)
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+    query = models.Permission
+
+    if filter_string:
+        query = query.filter(name__icontains=filter_string)
+    return await filter_and_list(
+        query=query,
+        model=models.Permission,
+        per_page=per_page,
+        page=page,
+        sort_by=sort_by,
+        order_by=order_by,
+        select=select,
+    )
 
 
 async def get_total_count() -> ITotalCount:

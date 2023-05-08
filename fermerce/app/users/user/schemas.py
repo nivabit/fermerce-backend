@@ -1,7 +1,9 @@
 import typing as t
 import uuid
 import pydantic as pyd
-
+from fermerce.app.users.staff.schemas import IStaffOut
+from fermerce.app.business.vendor.schemas import IVendorOut
+from fermerce.app.users.user.utils import IUserOutFull
 from fermerce.core.schemas.response import IResponseFilterOut
 
 
@@ -76,13 +78,9 @@ class IUserOut(IBaseUser):
         }
 
 
-class IUserOutFull(IBaseUser):
-    email: t.Optional[pyd.EmailStr]
-    username: t.Optional[str]
-    id: t.Optional[uuid.UUID]
-    is_active: t.Optional[bool] = False
-    is_suspended: t.Optional[bool] = False
-    is_verified: t.Optional[bool] = False
+class IUserFullOut(IUserOutFull):
+    staff: t.Optional[IStaffOut]
+    vendor: t.Optional[IVendorOut]
 
     class Config:
         orm_mode = True
@@ -97,7 +95,15 @@ class IUserOutFull(IBaseUser):
 
 
 class UserOutList(IResponseFilterOut):
-    results: t.List[t.Union[IUserOut, IUserOutFull]] = []
+    results: t.List[
+        t.Union[
+            IUserOutFull,
+            IUserOut,
+        ]
+    ]
+
+    class Config:
+        extra = "allow"
 
 
 class IGetPasswordResetLink(pyd.BaseModel):

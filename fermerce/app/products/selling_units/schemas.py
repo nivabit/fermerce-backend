@@ -1,5 +1,6 @@
 import uuid
 import pydantic as pyd
+import typing as t
 
 
 class IProductSellingUnitBase(pyd.BaseModel):
@@ -20,4 +21,4 @@ class IProductSellingUnitOut(pyd.BaseModel):
 
 class IProductRemoveSellingUnitIn(pyd.BaseModel):
     product_id: uuid.UUID
-    unit_id: uuid.UUID
+    selling_unit_ids: t.List[uuid.UUID]

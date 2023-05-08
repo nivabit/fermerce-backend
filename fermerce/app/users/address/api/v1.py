@@ -9,7 +9,9 @@ from fermerce.core.enum.sort_type import SortOrder
 router = APIRouter(prefix="/shipping_addresses", tags=["Shipping shipping address"])
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.IAddressOut)
+@router.post(
+    "/", status_code=status.HTTP_201_CREATED, response_model=schemas.IAddressOut
+)
 async def create_address(
     data_in: schemas.IAddressIn,
     user: User = Depends(require_user),
@@ -19,7 +21,7 @@ async def create_address(
 
 @router.get(
     "/",
-    response_model=t.List[schemas.IAddressListOut],
+    response_model=schemas.IAddressListOut,
     status_code=status.HTTP_200_OK,
 )
 async def get_address_list(
@@ -32,7 +34,10 @@ async def get_address_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
+    load_related: bool = False,
 ):
     return await services.filter(
         filter_string=filter_string,
@@ -41,6 +46,7 @@ async def get_address_list(
         user=user,
         order_by=order_by,
         sort_by=sort_by,
+        load_related=load_related
     )
 
 
@@ -52,8 +58,11 @@ async def get_address_list(
 async def get_address(
     address_id: uuid.UUID,
     user: User = Depends(require_user),
+    load_related: bool = False,
 ):
-    return await services.get(address_id=address_id, user=user)
+    return await services.get(
+        address_id=address_id, user=user, load_related=load_related
+    )
 
 
 @router.put(

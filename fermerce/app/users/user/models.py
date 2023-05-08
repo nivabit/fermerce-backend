@@ -31,9 +31,6 @@ class User(models.Model):
     class Meta:
         ordering = ("-created_at", "-id")
 
-    class PydanticMeta:
-        exclude = ["password"]
-
     @staticmethod
     def generate_hash(password: str) -> str:
         return Hasher.hash_password(password)

@@ -8,6 +8,7 @@ from fastapi import (
 from tortoise.expressions import Q
 from fermerce.core.enum.sort_type import SearchType, SortOrder
 from fermerce.core.schemas.response import ITotalCount, IResponseMessage
+from fermerce.core.services.base import filter_and_list, filter_and_single
 from fermerce.lib.errors import error
 from fermerce.app.products.product import models, schemas
 from fermerce.app.products.category.models import ProductCategory
@@ -15,8 +16,12 @@ from fermerce.app.medias.models import Media
 from fermerce.app.users.user.models import User
 
 
-async def create(user: User, data_in: schemas.IProductIn, request: Request) -> models.Product:
-    check_product = await models.Product.get_or_none(name=data_in.name, vendor=user.vendor)
+async def create(
+    user: User, data_in: schemas.IProductIn, request: Request
+) -> models.Product:
+    check_product = await models.Product.get_or_none(
+        name=data_in.name, vendor=user.vendor
+    )
     if check_product:
         raise error.DuplicateError(f"Product with name `{data_in.name}`already  exists")
 
@@ -37,7 +42,9 @@ async def create(user: User, data_in: schemas.IProductIn, request: Request) -> m
         to_create.update({"cover_media": cover_img})
     new_product = await models.Product.create(**to_create, vendor=user.vendor)
     if data_in.categories:
-        product_categories = await ProductCategory.filter(id__in=data_in.categories).all()
+        product_categories = await ProductCategory.filter(
+            id__in=data_in.categories
+        ).all()
         if product_categories:
             await new_product.categories.add(*product_categories)
 
@@ -62,7 +69,9 @@ async def create(user: User, data_in: schemas.IProductIn, request: Request) -> m
 async def update(
     user: User, product_id: uuid.UUID, data_in: schemas.IProductIn, request: Request
 ) -> models.Product:
-    check_product = await models.Product.get_or_none(name=data_in.name, vendor=user.vendor)
+    check_product = await models.Product.get_or_none(
+        name=data_in.name, vendor=user.vendor
+    )
     if check_product and check_product.id != product_id:
         raise error.DuplicateError(f"Product with name `{data_in.name}`already  exists")
     if data_in.categories:
@@ -81,17 +90,23 @@ async def update(
         in_stock=data_in.in_stock,
     )
     if data_in.cover_img:
-        check_product_cover_media = await Media.get_or_none(cover_media=check_product.id)
+        check_product_cover_media = await Media.get_or_none(
+            cover_media=check_product.id
+        )
         if check_product_cover_media:
             await check_product_cover_media.delete()
             await Media.create(
-                url=Media.convert_image_name_to_url(media_url=data_in.cover_img, request=request),
+                url=Media.convert_image_name_to_url(
+                    media_url=data_in.cover_img, request=request
+                ),
                 uri=data_in.cover_img,
             )
     if data_in.galleries:
         media_galleries_obj = [
             await Media.create(
-                url=Media.convert_image_name_to_url(media_url=media_uri, request=request),
+                url=Media.convert_image_name_to_url(
+                    media_url=media_uri, request=request
+                ),
                 uri=media_uri,
             )
             for media_uri in data_in.galleries
@@ -107,41 +122,11 @@ async def update(
     raise error.ServerError("Error while creating product")
 
 
-async def get(slug: str, load_related: bool) -> models.Product:
-    query = models.Product.get_or_none(slug__icontains=slug)
-    if load_related:
-        to_pre_fetch = set.union(
-            models.Product._meta.m2m_fields,
-            models.Product._meta.fk_fields,
-            models.Product._meta.o2o_fields,
-            models.Product._meta.backward_o2o_fields,
-            models.Product._meta.backward_fk_fields,
-        )
-        query = query.prefetch_related(*to_pre_fetch)
-    if not load_related:
-        query = query.prefetch_related(
-            *models.Product._meta.fk_fields, *models.Product._meta.o2o_fields
-        )
-    result = await query
-    if not result:
-        raise error.NotFoundError()
-    if not load_related and result:
-        return dict(result)
-    if result and load_related:
-        items = {
-            field_name: list(getattr(result, field_name))
-            if hasattr(result, field_name) and field_name in models.Product._meta.m2m_fields
-            else dict(getattr(result, field_name))
-            if field_name in models.Product._meta.fk_fields
-            or field_name in models.Product._meta.o2o_fields
-            or field_name in models.Product._meta.backward_o2o_fields
-            else list(getattr(result, field_name))
-            if field_name in models.Product._meta.backward_fk_fields
-            else None
-            for field_name in to_pre_fetch
-        }
-        result = dict(**dict(result), **items)
-
+async def get(slug: str, load_related: bool) -> schemas.IProductOut:
+    query = models.Product.filter(slug=slug)
+    result = await filter_and_single(
+        query=query, load_related=load_related, model=models.Product
+    )
     if not result:
         raise error.NotFoundError("Product not found")
     return result
@@ -156,89 +141,55 @@ async def filter(
     load_related: bool = False,
     sort_by: SortOrder = SortOrder.asc,
     order_by: str = None,
-    is_active: bool = False,
     is_suspended: bool = False,
     in_stock: bool = False,
     search_type: SearchType = SearchType._or,
-) -> t.List[models.Product]:
-    offset = (page - 1) * per_page
-    limit = per_page
-
-    # Query the model with the filter and pagination parameters.
+) -> t.List[schemas.IProductListOut]:
     query = None
     if search_type == SearchType._or:
         query = models.Product.filter(
-            Q(is_active=is_active) | Q(in_stock=in_stock) | Q(is_suspended=is_suspended)
+            Q(in_stock=in_stock) | Q(is_suspended=is_suspended)
         )
     else:
         query = models.Product.filter(
-            Q(is_active=is_active),
-            Q(is_suspended=is_suspended),
             Q(in_stock=in_stock),
+            Q(is_suspended=is_suspended),
+            Q(is_suspended=is_suspended),
+            Q(name__icontains=filter_string),
+            Q(slug__icontains=filter_string),
+            Q(details__description__icontains=filter_string),
+            Q(details__title__icontains=filter_string),
+            Q(sku__icontains=filter_string),
+            Q(categories__name__icontains=filter_string),
         )
-
-    query = query.all().offset(offset).limit(limit)
-    if sort_by == SortOrder.asc and bool(order_by):
-        query = query.order_by(
-            *[f"-{col}" for col in order_by.split(",") if col in models.Product._meta.fields]
+    if filter_string:
+        query = query.filter(
+            Q(in_stock=in_stock)
+            | Q(is_suspended=is_suspended)
+            | Q(is_suspended=is_suspended)
+            | Q(name__icontains=filter_string)
+            | Q(slug__icontains=filter_string)
+            | Q(description__icontains=filter_string)
+            | Q(details__title__icontains=filter_string)
+            | Q(details__description__icontains=filter_string)
+            | Q(sku__icontains=filter_string)
+            | Q(categories__name__icontains=filter_string)
         )
-    elif sort_by == SortOrder.desc and bool(order_by):
-        query = query.order_by(
-            *[f"{col}" for col in order_by.split(",") if col in models.Product._meta.fields]
+        query = query.filter(
+            Q(vendor__business_name__icontains=filter_string),
+            Q(vendor__is_suspended=False),
         )
-    else:
-        query = query.order_by("-id")
-    to_pre_fetch = set.union(
-        models.Product._meta.m2m_fields,
-        models.Product._meta.fk_fields,
-        models.Product._meta.o2o_fields,
-        models.Product._meta.backward_o2o_fields,
-        models.Product._meta.backward_fk_fields,
+    result = await filter_and_list(
+        model=models.Product,
+        query=query,
+        page=page,
+        load_related=load_related,
+        per_page=per_page,
+        select=select,
+        sort_by=sort_by,
+        order_by=order_by,
     )
-
-    if load_related:
-        query = query.prefetch_related(*to_pre_fetch)
-    if select:
-        query = query.values(
-            *[
-                col.strip()
-                for col in select.split(",")
-                if col.strip() in models.Product._meta.fields and col.strip() not in to_pre_fetch
-            ]
-        )
-    results = await query
-    if load_related and not select:
-        results = [
-            schemas.IProductLongInfo(
-                **{
-                    field_name: list(getattr(result, field_name))
-                    if hasattr(result, field_name) and field_name in models.Product._meta.m2m_fields
-                    else dict(getattr(result, field_name))
-                    if field_name in models.Product._meta.fk_fields
-                    or field_name in models.Product._meta.o2o_fields
-                    or field_name in models.Product._meta.backward_o2o_fields
-                    else list(getattr(result, field_name))
-                    if field_name in models.Product._meta.backward_fk_fields
-                    else None
-                    for field_name in to_pre_fetch
-                },
-                **dict(result),
-            )
-            for result in results
-        ]
-
-    # Count the total number of results with the same filter.
-
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-
-    # Return the pagination information and results as a dictionary
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+    return result
 
 
 async def get_product_count() -> ITotalCount:
@@ -251,61 +202,4 @@ async def delete(product_id: uuid.UUID, user: User):
     if not get_product:
         raise error.NotFoundError("Product not found")
     await get_product.delete()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-"""****************************************************Product details********************************************************************"""
-
-
-async def create_details(data_in: schemas.IProductDetailsIn, user: User) -> models.ProductDetail:
-    get_product = await models.Product.get_or_none(id=data_in.product_id, vendor=user.vendor)
-    if not get_product:
-        raise error.NotFoundError("product detail not found")
-    to_create = [models.ProductDetail(**data, product=get_product) for data in data_in.details]
-    created_details = await models.ProductDetail.bulk_create(to_create)
-    if created_details:
-        return IResponseMessage(message="Product details was created successfully")
-    raise error.ServerError("error creating product details")
-
-
-async def get_detail(detail_id: uuid.UUID) -> models.ProductDetail:
-    product_detail = await models.ProductDetail.get_or_none(id=detail_id)
-    if not product_detail:
-        raise error.NotFoundError("product detail not found")
-    return product_detail
-
-
-async def get_product_detail(product_id: uuid.UUID) -> t.List[models.ProductDetail]:
-    product_details = await models.ProductDetail.filter(product=product_id).all()
-    return product_details
-
-
-async def update_product_detail(
-    data_in: schemas.IProductDetailsIn, user: User
-) -> models.ProductDetail:
-    get_product = await models.Product.get_or_none(id=data_in.product_id, vendor=user.vendor)
-    if not get_product:
-        raise error.NotFoundError("product not found")
-
-    get_product_detail = await models.ProductDetail.get_or_none(
-        id=data_in.detail_id, product=get_product
-    )
-    if not get_product_detail:
-        raise error.NotFoundError("product detail does not exist")
-    get_product_detail.update_from_dict(data_in.dict(exclude={"product_id", "detail_id"}))
-    await get_product_detail.save()
-    return get_product_detail
-
-
-async def delete_product_detail(data_in: schemas.IProductDetailsRemoveIn, user: User):
-    get_product = await models.Product.get_or_none(id=data_in.product_id, vendor=user.vendor)
-    if not get_product:
-        raise error.NotFoundError("product not found")
-
-    get_product_detail = await models.ProductDetail.get_or_none(
-        id=data_in.detail_id, product=get_product
-    )
-    if not get_product_detail:
-        raise error.NotFoundError("Product detail not found")
-    await get_product_detail.delete()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

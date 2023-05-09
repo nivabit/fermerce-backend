@@ -1,11 +1,12 @@
 from io import BytesIO
+import typing as t
 from fastapi import UploadFile
 from PIL import Image
 import ffmpeg
 import mimetypes
 
 
-async def compress_file(file: UploadFile, max_size: int = 200) -> bytes:
+async def compress_file(file: UploadFile, max_size: int = 200) -> t.Tuple[bytes, str]:
     # Read the file contents
     contents = await file.read()
 
@@ -21,13 +22,11 @@ async def compress_file(file: UploadFile, max_size: int = 200) -> bytes:
         while True:
             # Save the image with the desired quality
             buffer = BytesIO()
-            image.save(buffer, format="JPEG", optimize=True, quality=70)
+            image.save(buffer, format="WEBP", optimize=True, quality=70)
             buffer.seek(0)
 
             # Check the file size of the compressed image
             size = len(buffer.getvalue()) / 1024
-
-            # Break out of the loop if the file size is below the maximum
             if size < max_size:
                 break
 
@@ -37,7 +36,8 @@ async def compress_file(file: UploadFile, max_size: int = 200) -> bytes:
             )
 
         # Return the compressed image
-        return buffer.getvalue()
+        content_type = "image/webp"
+        return buffer.getvalue(), content_type
     elif file_type and file_type.startswith("video"):
         # Set the video bitrate
         bitrate = "500k"
@@ -62,7 +62,12 @@ async def compress_file(file: UploadFile, max_size: int = 200) -> bytes:
         out = process.execute(stream=contents)
 
         # Return the compressed video
-        return out
+        return out, "video/mp4"
     else:
         # Unsupported file type
         raise ValueError("Unsupported file type")
+
+
+def iter_media(file_obj: bytes, chunk_size) -> object:
+    with open(file_obj, mode="rb", buffering=chunk_size) as file_obj:
+        yield from file_obj

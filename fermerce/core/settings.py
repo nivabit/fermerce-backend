@@ -49,6 +49,7 @@ class Settings(pyd.BaseSettings):
     secret_key: str = os.getenv("SECRET_KEY")
     deta_space_key: str = os.getenv("DETA_SPACE_KEY")
     refresh_secret_key: str = os.getenv("REFRESH_SECRET_KEY")
+    upload_key: str = os.getenv("UPLOAD_KEY")
     algorithm: str = os.getenv("ALGORITHM")
     access_token_expire_time: int = os.getenv("ACCESS_TOKEN_EXPIRE_TIME")
     refresh_token_expire_time: int = os.getenv("REFRESH_TOKEN_EXPIRE_TIME")

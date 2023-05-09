@@ -11,7 +11,9 @@ from fermerce.lib.utils import get_api_prefix
 from tortoise.models import Model
 
 
-Oauth_schema = OAuth2PasswordBearer(tokenUrl=f"{get_api_prefix.get_prefix()}/auth/login")
+Oauth_schema = OAuth2PasswordBearer(
+    tokenUrl=f"{get_api_prefix.get_prefix()}/auth/login"
+)
 
 
 class AppAuth:
@@ -40,16 +42,18 @@ class AppAuth:
 
     @staticmethod
     async def verify_file_upload_api_key(
-        api_key: str = Header(..., description="API key for file upload authorization")
+        x_api_key: str = Header(
+            ..., description="API key for file upload authorization"
+        )
     ):
         try:
             payload: dict = jose.jwt.decode(
-                token=api_key,
+                token=x_api_key,
                 key=base_config.secret_key,
                 algorithms=[base_config.algorithm],
             )
 
-            if not payload.get("user_id", None):
+            if not payload.get("api_key", None):
                 raise AppAuth.credentials_exception
             return payload
         except jose.JWTError:

@@ -1,5 +1,5 @@
 import typing as t
-from fastapi import APIRouter, Depends, Form, Request, UploadFile
+from fastapi import APIRouter, Depends, Form, Header, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from fermerce.app.medias import schemas, services
 from fermerce.core.settings import config
@@ -16,7 +16,10 @@ router = APIRouter(
     "/",
     dependencies=[Depends(require_user), Depends(AppAuth.verify_file_upload_api_key)],
 )
-async def create_resource(request: Request, files: t.List[UploadFile] = Form()):
+async def create_resource(
+    request: Request,
+    files: t.List[UploadFile] = Form(media_type="multipart/form-data"),
+):
     return await services.create(
         request=request,
         media_objs=files,
@@ -31,7 +34,7 @@ async def update_resource(uri: str, file: UploadFile = Form()):
 @router.get(
     "/{uri}",
     name=config.media_url_endpoint_name,
-    dependencies=[Depends(require_user), Depends(AppAuth.verify_file_upload_api_key)],
+    dependencies=[Depends(require_user)],
 )
 async def get_resource(uri: str) -> StreamingResponse:
     return await services.get(uri)

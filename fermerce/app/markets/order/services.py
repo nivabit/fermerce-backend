@@ -1,5 +1,6 @@
 import typing as t
 import uuid
+from tortoise.expressions import Q
 from fermerce.app.markets.cart.models import Cart
 from fermerce.app.markets.delivery_mode.models import DeliveryMode
 from fermerce.app.markets.status.models import Status
@@ -8,6 +9,7 @@ from fermerce.app.users.user.models import User
 from fermerce.app.markets.order import models, schemas
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage
+from fermerce.core.services.base import filter_and_list
 from fermerce.lib.errors import error
 
 
@@ -21,9 +23,15 @@ async def create(
     get_delivery_mode = await DeliveryMode.get_or_none(id=data_in.delivery_mode)
     if not get_delivery_mode:
         raise error.NotFoundError("Order delivery mode not found")
-    get_carts = await Cart.filter(user=user, id__in=data_in.cart_ids).all()
+    get_carts = (
+        await Cart.filter(user=user, id__in=data_in.cart_ids)
+        .prefetch_related("product", "selling_unit")
+        .all()
+    )
     if not get_carts:
-        raise error.NotFoundError("No product in cart, please add product to cart to continue")
+        raise error.NotFoundError(
+            "No product in cart, please add product to cart to continue"
+        )
     get_initial_status = await Status.get_or_none(name__icontains="pending")
     if not get_initial_status:
         get_initial_status = await Status.create(name="pending")
@@ -50,14 +58,18 @@ async def create(
         if order_items_list:
             results = await models.OrderItem.bulk_create(order_items_list)
             if results:
-                deleted_count = Cart.filter(user=user, id__in=data_in.cart_ids).delete()
+                deleted_count = await Cart.filter(
+                    user=user, id__in=data_in.cart_ids
+                ).delete()
                 if deleted_count == len(get_carts):
                     return schemas.IOrderSuccessOut(order_id=new_order.id)
     raise error.ServerError("Error creating order, please try again")
 
 
 async def update_order_status(data_in: schemas.IOrderUpdate) -> dict:
-    get_user_order_item = await models.OrderItem.get_or_none(tracking_id=data_in.tracking_id)
+    get_user_order_item = await models.OrderItem.get_or_none(
+        tracking_id=data_in.tracking_id
+    )
     if not get_user_order_item:
         raise error.NotFoundError("Order item is not found")
     get_status = await Status.get_or_none(id=data_in.status_id)
@@ -71,9 +83,9 @@ async def update_order_status(data_in: schemas.IOrderUpdate) -> dict:
 
 
 async def add_promo_code(data_in: schemas.IOrderUpdatePromoCodeIn) -> dict:
-    get_user_order = await models.OrderItem.get_or_none(id=data_in.order_id).prefetch_related(
-        "promo_codes", "items"
-    )
+    get_user_order = await models.OrderItem.get_or_none(
+        id=data_in.order_id
+    ).prefetch_related("promo_codes", "items")
     if not get_user_order:
         raise error.NotFoundError("Order item is not found")
     get_promo_codes = await Status.get_or_none(id=data_in.promo_code_id)
@@ -94,38 +106,33 @@ async def filter(
     page: int = 0,
     order_by: str = "id",
     sort_by: t.Optional[SortOrder] = SortOrder.asc,
-    get_orders=models.Order,
+    load_related: bool = False,
+    select: str = "",
 ) -> models.Order:
+    query = models.Order
     if user:
-        get_orders = models.Order.filter(user=user)
+        query = query.filter(user=user)
     if filter_string:
-        get_orders = get_orders.filter(order_id__icontains=filter_string)
-    if sort_by == SortOrder.asc:
-        get_orders = get_orders.order_by(*[f"-{el}" for el in order_by.split(",")])
-    else:
-        get_orders = get_orders.order_by(*[el for el in order_by.split(",")])
-    get_orders = get_orders.prefetch_related(
-        *models.Order._meta.fk_fields, *models.Order._meta.backward_fk_fields
+        query = query.filter(Q(order_id__icontains=filter_string))
+    result = await filter_and_list(
+        model=models.Order,
+        query=query,
+        sort_by=sort_by,
+        order_by=order_by,
+        page=page,
+        per_page=per_page,
+        load_related=load_related,
     )
-    offset = (page - 1) * per_page
-    limit = per_page
-    results = await get_orders.all().offset(offset).limit(limit)
-
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+    return result
 
 
 async def get_order(
     user: User,
     order_id: uuid.UUID,
 ) -> models.Order:
-    order = await models.OrderItem.get_or_none(order_id=order_id, user=user).prefetch_related(
+    order = await models.OrderItem.get_or_none(
+        order_id=order_id, user=user
+    ).prefetch_related(
         *models.Order._meta.fk_fields,
         *models.Order._meta.backward_fk_fields,
     )
@@ -136,11 +143,11 @@ async def get_order(
 
 async def get_order_items(
     user: User,
-    order_id: str,
-) -> models.Order:
-    order = await models.OrderItem.filter(order__id=order_id, user=user).prefetch_related(
-        *models.OrderItem._meta.fk_fields, *models.OrderItem._meta.backward_fk_fields
-    )
-    if order:
-        return order.items
-    raise error.NotFoundError("order not found")
+    order_id: uuid.UUID,
+) -> models.OrderItem:
+    products = await models.OrderItem.filter(
+        order__id=order_id, order__user=user
+    ).first()
+    if products:
+        return products
+    raise error.NotFoundError("order items not found")

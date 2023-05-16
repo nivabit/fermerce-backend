@@ -19,7 +19,7 @@ async def create(
     get_product = await Product.get_or_none(pk=data_in.product_id, vendor=user.vendor)
     if not get_product:
         raise error.NotFoundError("Product not found")
-    get_measuring_unit = await MeasuringUnit.get_or_none(id=data_in.unit_id)
+    get_measuring_unit = await MeasuringUnit.get_or_none(id=data_in.selling_unit_id)
     check_existing_unit = await models.ProductSellingUnit.get_or_none(
         unit=get_measuring_unit, product=get_product
     )

@@ -8,7 +8,7 @@ from fermerce.core.enum.sort_type import SortOrder
 # from fermerce.app.users.staff.dependency import require_super_admin_or_admin
 
 
-router = APIRouter(prefix="/delivery-modes", tags=["Order delivery modes"])
+router = APIRouter(prefix="/delivery_modes", tags=["Order delivery modes"])
 
 
 @router.post(
@@ -42,7 +42,9 @@ async def get_delivery_mode_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
 ):
     return await services.filter(
         filter_string=filter_string,
@@ -71,7 +73,9 @@ async def get_delivery_mode(delivery_mode_id: uuid.UUID) -> schemas.IDeliveryMod
 async def update_delivery_mode(
     delivery_mode_id: uuid.UUID, delivery_mode: schemas.IDeliveryModeIn
 ) -> schemas.IDeliveryModeOut:
-    return await services.update(delivery_mode_id=delivery_mode_id, data_in=delivery_mode)
+    return await services.update(
+        delivery_mode_id=delivery_mode_id, data_in=delivery_mode
+    )
 
 
 @router.get(

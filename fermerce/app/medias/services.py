@@ -16,6 +16,7 @@ async def create(
         )
         if bad_types:
             raise error.BadDataError("Unsupported media type, expected")
+        to_out = []
         for media in media_objs:
             file_bytes, content_type = await utils.compress_file(media)
             file_name = models.Media.generate_unique_name(
@@ -33,7 +34,9 @@ async def create(
                     content_type=content_type,
                     alt=desire_alt if desire_alt else file_name,
                 )
-        return result
+                to_out.append(result.id)
+        return to_out
+
     except Exception as e:
         raise error.ServerError("Error while creating resource" + str(e))
 

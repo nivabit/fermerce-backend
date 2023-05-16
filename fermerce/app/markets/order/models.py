@@ -17,7 +17,9 @@ class Order(models.Model):
         unique=True,
     )
     user = fields.ForeignKeyField("models.User", related_name="orders")
-    shipping_address = fields.ForeignKeyField("models.ShippingAddress", related_name="orders")
+    shipping_address = fields.ForeignKeyField(
+        "models.ShippingAddress", related_name="orders"
+    )
     promo_codes = fields.ManyToManyField("models.ProductPromoCode")
     # payment = fields.ForeignKeyField("models.Payment", related_name="order")
     delivery_mode = fields.ForeignKeyField("models.DeliveryMode")
@@ -34,7 +36,7 @@ class OrderItem(models.Model):
     )
     status = fields.ForeignKeyField("models.Status")
     product = fields.ForeignKeyField("models.Product")
-    quantity = fields.IntField(default=0, null=False)
+    quantity = fields.IntField(default=1, null=False)
     order = fields.ForeignKeyField("models.Order", related_name="order_items")
     trackings: fields.ReverseRelation[Tracking]
     selling_unit = fields.ForeignKeyField("models.ProductSellingUnit")

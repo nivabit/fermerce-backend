@@ -31,11 +31,7 @@ async def update_resource(uri: str, file: UploadFile = Form()):
     return await services.update(uri=uri, media_obj=file)
 
 
-@router.get(
-    "/{uri}",
-    name=config.media_url_endpoint_name,
-    dependencies=[Depends(require_user)],
-)
+@router.get("/{uri}", name=config.media_url_endpoint_name)
 async def get_resource(uri: str) -> StreamingResponse:
     return await services.get(uri)
 

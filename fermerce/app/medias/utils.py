@@ -2,8 +2,8 @@ from io import BytesIO
 import typing as t
 from fastapi import UploadFile
 from PIL import Image
-import ffmpeg
 import mimetypes
+from fermerce.lib.errors import error
 
 
 async def compress_file(file: UploadFile, max_size: int = 200) -> t.Tuple[bytes, str]:
@@ -39,35 +39,11 @@ async def compress_file(file: UploadFile, max_size: int = 200) -> t.Tuple[bytes,
         content_type = "image/webp"
         return buffer.getvalue(), content_type
     elif file_type and file_type.startswith("video"):
-        # Set the video bitrate
-        bitrate = "500k"
+        max_size = 1024 * 1024  # 1 megabyte in bytes
 
-        # Compress the video
-        process = (
-            ffmpeg.FFmpeg()
-            .option("y")
-            .input("pipe:", format="h264")
-            .output(
-                "tem.mp4",
-                {
-                    "codec:v": "libx264",
-                    "b:v": bitrate,
-                },
-                vf="scale=420:-1",
-                preset="medium",
-                crf=23,
-                acodec="copy",
-            )
-        )
-        out = process.execute(stream=contents)
-
-        # Return the compressed video
-        return out, "video/mp4"
+        if file.size > max_size:
+            return contents, "video/mp4"
+        raise error.BadDataError("file  file size is too large")
     else:
         # Unsupported file type
         raise ValueError("Unsupported file type")
-
-
-def iter_media(file_obj: bytes, chunk_size) -> object:
-    with open(file_obj, mode="rb", buffering=chunk_size) as file_obj:
-        yield from file_obj

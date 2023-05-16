@@ -10,7 +10,7 @@ class IProductIn(pyd.BaseModel):
     description: str
     in_stock: bool = True
     galleries: t.List[str] = []
-    cover_img: t.Optional[str]
+    cover_img: t.Optional[uuid.UUID]
     categories: t.List[t.Optional[uuid.UUID]] = []
 
 

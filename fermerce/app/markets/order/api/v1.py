@@ -23,16 +23,24 @@ async def get_user_orders(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
+    select: t.Optional[str] = Query(
+        default="id", description="select order direct attributes, e.g. id"
+    ),
     user: User = Depends(require_user),
+    load_related: bool = False,
 ):
-    return await services.get_orders(
+    return await services.filter(
         filter_string=filter_string,
         page=page,
         per_page=per_page,
         sort_by=sort_by,
         order_by=order_by,
         user=user,
+        select=select,
+        load_related=load_related,
     )
 
 

@@ -32,13 +32,13 @@ class IOrderItemsOut(pyd.BaseModel):
 
 
 class IOrderSuccessOut(pyd.BaseModel):
-    order_id: str
+    order_id: uuid.UUID
 
 
 class IOrderIn(pyd.BaseModel):
     cart_ids: t.Optional[t.List[uuid.UUID]] = None
     delivery_mode: uuid.UUID
-    address_id: str
+    address_id: uuid.UUID
 
 
 class IOrderUpdate(pyd.BaseModel):

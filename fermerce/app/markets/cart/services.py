@@ -1,10 +1,12 @@
 import typing as t
 import uuid
 from fastapi import status, Response
+from tortoise.expressions import Q
 from fermerce.app.markets.cart.models import Cart
 from fermerce.app.products.selling_units.models import ProductSellingUnit
 from fermerce.app.users.user.models import User
 from fermerce.core.enum.sort_type import SortOrder
+from fermerce.core.services.base import filter_and_list
 from fermerce.lib.errors import error
 from fermerce.app.markets.cart import models, schemas
 from fermerce.app.products.product.models import Product
@@ -15,6 +17,7 @@ async def create(data_in: schemas.ICartIn, user: User) -> models.Cart:
     if not get_product:
         raise error.NotFoundError("Product not found")
     selling_unit = await ProductSellingUnit.get_or_none(id=data_in.selling_unit)
+    print(selling_unit)
     if not selling_unit:
         raise error.NotFoundError("Product selling unit not found")
     if selling_unit.size == 0:
@@ -38,7 +41,9 @@ async def create(data_in: schemas.ICartIn, user: User) -> models.Cart:
     return new_cart
 
 
-async def update(data_in: schemas.ICartIn, user: User, cart_id: uuid.UUID) -> models.Cart:
+async def update(
+    data_in: schemas.ICartIn, user: User, cart_id: uuid.UUID
+) -> models.Cart:
     get_cart = await Cart.get_or_none(id=cart_id, user=user)
     if not get_cart:
         raise error.NotFoundError("Cart not found")
@@ -49,11 +54,28 @@ async def update(data_in: schemas.ICartIn, user: User, cart_id: uuid.UUID) -> mo
     if not selling_unit:
         raise error.NotFoundError("Product selling unit not found")
     if selling_unit.size == 0:
+        await Product.filter(id=data_in.product_id).update(in_stock=False)
         raise error.BadDataError("Product is out of stock")
-    if selling_unit.size < data_in.quantity:
-        raise error.BadDataError(
-            f"only {selling_unit.size} of {get_product.name} left for this product"
-        )
+    if selling_unit != get_cart.selling_unit:
+        if (
+            selling_unit.size < get_cart.quantity
+            or selling_unit.size < data_in.quantity
+        ):
+            raise error.BadDataError(
+                f"only {selling_unit.size} quantity of {get_product.name} left for this product"
+            )
+    if get_cart.quantity != data_in.quantity:
+        if data_in.quantity < get_cart.quantity:
+            selling_unit.update_from_dict(
+                dict(size=selling_unit.size + (get_cart.quantity - data_in.quantity))
+            )
+            await selling_unit.save()
+        if selling_unit.size > get_cart.quantity:
+            selling_unit.update_from_dict(
+                dict(size=selling_unit.size + (get_cart.quantity - data_in.quantity))
+            )
+            await selling_unit.save()
+
     else:
         selling_unit.update_from_dict(dict(size=selling_unit.size - data_in.quantity))
         await selling_unit.save()
@@ -79,33 +101,25 @@ async def filter(
     per_page: int = 10,
     page: int = 0,
     sort_by: SortOrder = SortOrder.asc,
-    order_by: str = "-id",
+    order_by: str = "id",
+    load_related: bool = False,
+    select: str = "",
 ) -> t.List[models.Cart]:
     query = Cart.filter(user=user)
     if filter_string:
-        query = query.filter(product__name__icontains=filter_string)
-    set_sort_by = []
-    if sort_by == SortOrder.asc and order_by:
-        for el in order_by.split(","):
-            if hasattr(Cart, el):
-                set_sort_by.append(f"-{el}")
-    else:
-        for el in order_by.split(","):
-            if hasattr(Cart, el):
-                set_sort_by.append(f"{el}")
-    if set_sort_by:
-        query = query.order_by(*set_sort_by)
-    results = await query.all().offset(offset).limit(limit)
-    offset = (page - 1) * per_page
-    limit = per_page
-    prev_page = page - 1 if page > 1 else None
-    next_page = page + 1 if (offset + limit) < len(results) else None
-    return {
-        "previous": prev_page,
-        "next": next_page,
-        "total_results": len(results),
-        "results": results,
-    }
+        query = query.filter(Q(product__name__icontains=filter_string))
+    results = await filter_and_list(
+        model=models.Cart,
+        query=query,
+        per_page=per_page,
+        page=page,
+        sort_by=sort_by,
+        order_by=order_by,
+        load_related=load_related,
+        select=select,
+    )
+
+    return results
 
 
 async def delete(cart_id: uuid.UUID, user: User):

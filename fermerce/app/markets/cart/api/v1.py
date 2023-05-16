@@ -11,7 +11,9 @@ router = APIRouter(prefix="/carts", tags=["Carts"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_cart(data_in: schemas.ICartIn, user: User = Depends(dependency.require_user)):
+async def create_cart(
+    data_in: schemas.ICartIn, user: User = Depends(dependency.require_user)
+):
     return await services.create(data_in=data_in, user=user)
 
 
@@ -27,7 +29,7 @@ async def update_cart(
 @router.get("/")
 async def get_carts(
     filter_string: str = Query(
-        default=SortOrder.desc, description="filter through product on the category"
+        default=None, description="filter through product on the category"
     ),
     per_page: int = 10,
     page: int = 1,
@@ -38,6 +40,10 @@ async def get_carts(
     order_by: t.Optional[str] = Query(
         default="id", description="order by attribute, e.g. id, created_at"
     ),
+    select: t.Optional[str] = Query(
+        default="", description="order by attribute, e.g. id, created_at"
+    ),
+    load_related: bool = False,
     user: User = Depends(dependency.require_user),
 ):
     return await services.filter(
@@ -47,6 +53,8 @@ async def get_carts(
         page=page,
         sort_by=sort_by,
         order_by=order_by,
+        load_related=load_related,
+        select=select,
     )
 
 
@@ -56,5 +64,7 @@ async def get_cart(cart_id: uuid.UUID, user: User = Depends(dependency.require_u
 
 
 @router.delete("/{cart_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_cart(cart_id: uuid.UUID, user: User = Depends(dependency.require_user)):
+async def delete_cart(
+    cart_id: uuid.UUID, user: User = Depends(dependency.require_user)
+):
     return await services.delete(cart_id, user)

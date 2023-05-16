@@ -52,6 +52,7 @@ async def filter(
         sort_by=sort_by,
         order_by=order_by,
     )
+
     return results
 
 
@@ -65,7 +66,9 @@ async def update(
     product_category_id: uuid.UUID,
     data_in: schemas.IProductCategoryIn,
 ) -> models.ProductCategory:
-    check_product_category = await models.ProductCategory.get_or_none(id=product_category_id)
+    check_product_category = await models.ProductCategory.get_or_none(
+        id=product_category_id
+    )
     if not check_product_category:
         raise error.NotFoundError("product category does not exist")
     check_name = await models.ProductCategory.get_or_none(name=data_in.name)
@@ -80,7 +83,9 @@ async def update(
 async def delete(
     product_category_id: uuid.UUID,
 ) -> None:
-    deleted_product_category = await models.ProductCategory.filter(id=product_category_id).delete()
+    deleted_product_category = await models.ProductCategory.filter(
+        id=product_category_id
+    ).delete()
     if not deleted_product_category:
         raise error.NotFoundError("product category does not exist")
     return Response(status_code=status.HTTP_204_NO_CONTENT)

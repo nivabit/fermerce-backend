@@ -19,7 +19,9 @@ async def create(
     data_in: schemas.IOrderIn,
     user: User,
 ) -> schemas.IOrderSuccessOut:
-    get_shipping_address = await ShippingAddress.get_or_none(id=data_in.address_id)
+    get_shipping_address = await ShippingAddress.get_or_none(
+        id=data_in.address_id
+    )
     if not get_shipping_address:
         raise error.NotFoundError("Shipping shipping_address does not exist")
     get_delivery_mode = await DeliveryMode.get_or_none(id=data_in.delivery_mode)
@@ -103,15 +105,23 @@ async def add_promo_code(
     if get_item.product.vendor.id == promo_code.vendor.id:
         if promo_code.single:
             if await get_item.promo_codes.filter(id=promo_code.id).exists():
-                return IResponseMessage(message="promo code  has already bean applied")
+                return IResponseMessage(
+                    message="promo code  has already bean applied"
+                )
             await get_item.promo_codes.add(promo_code)
             return IResponseMessage(message="Order status updated successfully")
         else:
-            if await promo_code.products.filter(id=get_item.product.id).exists():
+            if await promo_code.products.filter(
+                id=get_item.product.id
+            ).exists():
                 if await get_item.promo_codes.filter(id=promo_code.id).exists():
-                    return IResponseMessage(message="Order status updated successfully")
+                    return IResponseMessage(
+                        message="Order status updated successfully"
+                    )
                 await get_item.promo_codes.add(promo_code)
-                return IResponseMessage(message="Order status updated successfully")
+                return IResponseMessage(
+                    message="Order status updated successfully"
+                )
         raise error.BadDataError("Invalid promo code")
     raise error.BadDataError("Invalid promo code")
 

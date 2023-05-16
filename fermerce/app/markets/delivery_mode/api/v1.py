@@ -61,7 +61,9 @@ async def get_delivery_mode_list(
     # response_model=schemas.IDeliveryModeOut,
     # dependencies=[Depends(require_super_admin_or_admin)],
 )
-async def get_delivery_mode(delivery_mode_id: uuid.UUID) -> schemas.IDeliveryModeOut:
+async def get_delivery_mode(
+    delivery_mode_id: uuid.UUID,
+) -> schemas.IDeliveryModeOut:
     return await services.get(delivery_mode_id=delivery_mode_id)
 
 

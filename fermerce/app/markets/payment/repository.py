@@ -66,7 +66,9 @@ class PaymentRepository(BaseRepository[model.Payment]):
         try:
             today = date.today()
             start_of_month = date(today.year, today.month, 1)
-            end_of_month = date(today.year, today.month + 1, 1) - timedelta(days=1)
+            end_of_month = date(today.year, today.month + 1, 1) - timedelta(
+                days=1
+            )
             stmt = sa.select(sa.func.sum(self.model.total_payed)).where(
                 self.model.created_at >= start_of_month,
                 self.model.created_at <= end_of_month,
@@ -110,7 +112,9 @@ class PaymentRepository(BaseRepository[model.Payment]):
             )
         elif freq == Frequent.monthly:
             start_of_month = date(start_date.year, start_date.month, 1)
-            end_of_month = date(end_date.year, end_date.month + 1, 1) - timedelta(days=1)
+            end_of_month = date(
+                end_date.year, end_date.month + 1, 1
+            ) - timedelta(days=1)
             stmt = (
                 sa.select(sum_column)
                 .where(self.model.created_at >= start_of_month)

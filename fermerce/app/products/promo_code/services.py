@@ -61,7 +61,9 @@ async def filter(
 
 
 async def get_total_count(user: User) -> ITotalCount:
-    total = await models.ProductPromoCode.filter(vendor=user.vendor).all().count()
+    total = (
+        await models.ProductPromoCode.filter(vendor=user.vendor).all().count()
+    )
     return ITotalCount(count=total).dict()
 
 

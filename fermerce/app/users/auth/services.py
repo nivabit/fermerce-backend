@@ -19,7 +19,9 @@ async def login(
         Q(username__icontains=data_in.username) | Q(email=data_in.username)
     )
     if not check_user:
-        raise error.UnauthorizedError(detail="incorrect email, username or password")
+        raise error.UnauthorizedError(
+            detail="incorrect email, username or password"
+        )
     if not check_user.check_password(data_in.password):
         raise error.UnauthorizedError(detail="incorrect email or password")
     if check_user.is_archived:
@@ -53,7 +55,9 @@ async def login(
             refresh_token=refresh_token,
             user_ip=user_ip,
         )
-        return schemas.IToken(refresh_token=refresh_token, access_token=access_token)
+        return schemas.IToken(
+            refresh_token=refresh_token, access_token=access_token
+        )
     raise error.ServerError("Count not authenticate user")
 
 
@@ -69,7 +73,9 @@ async def login_token_refresh(
     JWTAUTH.data_decoder(encoded_data=data_in.refresh_token)
     if check_auth_token.ip_address != user_ip:
         raise error.UnauthorizedError()
-    get_jwt_data_for_encode = schemas.IToEncode(user_id=str(check_auth_token.user_id))
+    get_jwt_data_for_encode = schemas.IToEncode(
+        user_id=str(check_auth_token.user_id)
+    )
     access_token, refresh_token = JWTAUTH.jwt_encoder(
         data=get_jwt_data_for_encode.dict()
     )
@@ -81,7 +87,9 @@ async def login_token_refresh(
             refresh_token=refresh_token,
             user_ip=user_ip,
         )
-        return schemas.IToken(refresh_token=refresh_token, access_token=access_token)
+        return schemas.IToken(
+            refresh_token=refresh_token, access_token=access_token
+        )
     raise error.ServerError("could not create token, please try again")
 
 

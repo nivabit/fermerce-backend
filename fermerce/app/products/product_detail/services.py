@@ -12,15 +12,20 @@ from fermerce.app.users.user.models import User
 
 
 async def create_details(data_in: schemas.IProductDetailsIn, user: User):
-    get_product = await Product.get_or_none(id=data_in.product_id, vendor=user.vendor)
+    get_product = await Product.get_or_none(
+        id=data_in.product_id, vendor=user.vendor
+    )
     if not get_product:
         raise error.NotFoundError("product detail not found")
     to_create = [
-        models.ProductDetail(**data.dict(), product=get_product) for data in data_in.details
+        models.ProductDetail(**data.dict(), product=get_product)
+        for data in data_in.details
     ]
     created_details = await models.ProductDetail.bulk_create(to_create)
     if created_details:
-        return IResponseMessage(message="Product details was created successfully")
+        return IResponseMessage(
+            message="Product details was created successfully"
+        )
     raise error.ServerError("error creating product details")
 
 
@@ -46,7 +51,8 @@ async def filter(
         query = query.filter(product=product_id)
     if filter_string:
         query = query.filter(
-            Q(title__icontains=filter_string) | Q(description__icontains=filter_string)
+            Q(title__icontains=filter_string)
+            | Q(description__icontains=filter_string)
         )
 
     results = await filter_and_list(
@@ -65,7 +71,9 @@ async def filter(
 async def update_product_detail(
     data_in: schemas.IProductDetailsUpdateIn, user: User
 ) -> models.ProductDetail:
-    get_product = await Product.get_or_none(id=data_in.product_id, vendor=user.vendor)
+    get_product = await Product.get_or_none(
+        id=data_in.product_id, vendor=user.vendor
+    )
     if not get_product:
         raise error.NotFoundError("product not found")
 
@@ -74,13 +82,19 @@ async def update_product_detail(
     )
     if not get_product_detail:
         raise error.NotFoundError("product detail does not exist")
-    get_product_detail.update_from_dict(data_in.dict(exclude={"product_id", "detail_id"}))
+    get_product_detail.update_from_dict(
+        data_in.dict(exclude={"product_id", "detail_id"})
+    )
     await get_product_detail.save()
     return get_product_detail
 
 
-async def delete_product_detail(data_in: schemas.IProductDetailsRemoveIn, user: User):
-    get_product = await Product.get_or_none(id=data_in.product_id, vendor=user.vendor)
+async def delete_product_detail(
+    data_in: schemas.IProductDetailsRemoveIn, user: User
+):
+    get_product = await Product.get_or_none(
+        id=data_in.product_id, vendor=user.vendor
+    )
     if not get_product:
         raise error.NotFoundError("product not found")
 

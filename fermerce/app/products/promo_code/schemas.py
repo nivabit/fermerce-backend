@@ -8,9 +8,9 @@ from fermerce.lib.utils.random_string import random_str
 
 
 class IProductPromoCodeBase(pyd.BaseModel):
-    code: pyd.constr(max_length=10, min_length=4, strip_whitespace=True) = random_str(
-        10
-    )
+    code: pyd.constr(
+        max_length=10, min_length=4, strip_whitespace=True
+    ) = random_str(10)
     discount: t.Optional[float] = 0.1
     single: bool = True
     start: t.Optional[datetime.date] = datetime.datetime.utcnow().date()

@@ -4,7 +4,11 @@ import uuid
 
 
 def random_str(size=7) -> str:
-    ran = "".join(random.choices(string.ascii_uppercase + uuid.uuid4().hex.upper(), k=size))
+    ran = "".join(
+        random.choices(
+            string.ascii_uppercase + uuid.uuid4().hex.upper(), k=size
+        )
+    )
     return ran
 
 

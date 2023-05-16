@@ -77,7 +77,10 @@ async def update(
         raise error.DuplicateError("shipping address already exists")
     if get_address.state.id == get_address.id:
         result = await get_address.update_from_dict(
-            dict(**data_in.dict(exclude={"state", "phones"}), phones=",".join(data_in.phones))
+            dict(
+                **data_in.dict(exclude={"state", "phones"}),
+                phones=",".join(data_in.phones)
+            )
         )
     else:
         result = await get_address.update_from_dict(
@@ -133,7 +136,9 @@ async def delete(
     address_id: uuid.UUID,
     user: User,
 ) -> Response:
-    get_address = await models.ShippingAddress.get_or_none(id=address_id, user=user)
+    get_address = await models.ShippingAddress.get_or_none(
+        id=address_id, user=user
+    )
     if not get_address:
         raise error.NotFoundError("Shipping address not found")
     await get_address.delete()

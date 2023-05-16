@@ -9,27 +9,23 @@ from fermerce.core.enum.sort_type import SortOrder
 router = APIRouter(prefix="/messages", tags=["Message"])
 
 
-@router.post(
-    "/",
-    status_code=status.HTTP_201_CREATED,
-    #  dependencies=[Depends(require_dispatcher)]
-)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_message(
-    data_in: schemas.IMessageIn, staff: Staff = Depends(require_super_admin_or_admin)
+    data_in: schemas.IMessageIn,
+    staff: Staff = Depends(require_super_admin_or_admin),
 ):
     return await services.create(data_in=data_in, staff=staff)
 
 
-@router.put(
-    "/{message_id}",
-    status_code=status.HTTP_200_OK,
-)
+@router.put("/{message_id}", status_code=status.HTTP_200_OK)
 async def update_message(
     message_id: uuid.UUID,
     data_in: schemas.IMessageIn,
     staff: Staff = Depends(require_super_admin_or_admin),
 ):
-    return await services.update(message_id=message_id, data_in=data_in, staff=staff)
+    return await services.update(
+        message_id=message_id, data_in=data_in, staff=staff
+    )
 
 
 @router.get("/{message_id}", status_code=status.HTTP_200_OK)

@@ -81,7 +81,9 @@ async def update(
 async def delete(
     permission_id: uuid.UUID,
 ) -> None:
-    deleted_permission = await models.Permission.filter(id=permission_id).delete()
+    deleted_permission = await models.Permission.filter(
+        id=permission_id
+    ).delete()
     if not deleted_permission:
         raise error.NotFoundError("permission does not exist")
     return Response(status_code=status.HTTP_204_NO_CONTENT)

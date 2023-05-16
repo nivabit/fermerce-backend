@@ -12,7 +12,9 @@ from fastapi import Response
 async def create(
     data_in: schemas.IMeasuringUnitIn,
 ) -> models.MeasuringUnit:
-    check_measuring_unit = await models.MeasuringUnit.get_or_none(unit=data_in.unit)
+    check_measuring_unit = await models.MeasuringUnit.get_or_none(
+        unit=data_in.unit
+    )
     if check_measuring_unit:
         raise error.DuplicateError("measuring unit already exists")
     new_type = await models.MeasuringUnit.create(**data_in.dict())
@@ -78,7 +80,9 @@ async def update(
 async def delete(
     unit_id: uuid.UUID,
 ) -> None:
-    deleted_measuring_unit = await models.MeasuringUnit.filter(id=unit_id).delete()
+    deleted_measuring_unit = await models.MeasuringUnit.filter(
+        id=unit_id
+    ).delete()
     if not deleted_measuring_unit:
         raise error.NotFoundError("measuring unit does not exist")
     return Response(status_code=status.HTTP_204_NO_CONTENT)

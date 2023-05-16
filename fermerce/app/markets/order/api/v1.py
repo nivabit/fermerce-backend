@@ -10,7 +10,9 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_order(data_in: schemas.IOrderIn, user: User = Depends(require_user)):
+async def create_order(
+    data_in: schemas.IOrderIn, user: User = Depends(require_user)
+):
     return await services.create(data_in=data_in, user=user)
 
 
@@ -47,7 +49,9 @@ async def get_user_orders(
 
 @router.get("/{order_id}")
 async def get_order(
-    order_id: uuid.UUID, user: User = Depends(require_user), load_related: bool = False
+    order_id: uuid.UUID,
+    user: User = Depends(require_user),
+    load_related: bool = False,
 ):
     return await services.get_order(
         order_id=order_id,

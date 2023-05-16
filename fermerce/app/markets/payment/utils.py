@@ -21,7 +21,9 @@ def calculate_discount(
     data = DecimalToFloat(original_price=original_price, discount=discount)
     if int(discount) < 1:
         return original_price
-    discounted_price = data.original_price - ((data.original_price * data.discount) / 100)
+    discounted_price = data.original_price - (
+        (data.original_price * data.discount) / 100
+    )
     return discounted_price
 
 
@@ -60,12 +62,16 @@ def get_product_total_price(
     if items:
         for item in items:
             if item.selling_unit.price:
-                price += calculate_discount(item.selling_unit.price, item.product.property.discount)
+                price += calculate_discount(
+                    item.selling_unit.price, item.product.property.discount
+                )
             hard_back_price += item.hard_back_qty * calculate_discount(
-                item.product.property.hard_back_price, item.product.property.discount
+                item.product.property.hard_back_price,
+                item.product.property.discount,
             )
             paper_back_price += item.paper_back_qty * calculate_discount(
-                item.product.property.paper_back_price, item.product.property.discount
+                item.product.property.paper_back_price,
+                item.product.property.discount,
             )
         total_price = pdf_price + hard_back_price + paper_back_price
         return total_price

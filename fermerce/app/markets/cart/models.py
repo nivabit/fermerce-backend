@@ -10,7 +10,7 @@ class Cart(models.Model):
     product = fields.ForeignKeyField("models.Product")
     quantity = fields.IntField(default=0, null=False)
     user = fields.ForeignKeyField("models.User", related_name="carts")
-    selling_unit: fields.ForeignKeyRelation[ProductSellingUnit] = fields.ForeignKeyField(
-        "models.ProductSellingUnit"
-    )
+    selling_unit: fields.ForeignKeyRelation[
+        ProductSellingUnit
+    ] = fields.ForeignKeyField("models.ProductSellingUnit")
     created_at: fields.DatetimeField(auto_now=True)

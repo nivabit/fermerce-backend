@@ -14,12 +14,20 @@ from fermerce.app.business.vendor.api.v1 import router as business_api_router
 from fermerce.app.products.measuring_unit.api.v1 import (
     router as measurement_unit_api_router,
 )
-from fermerce.app.products.reviews.api.v1 import router as review_unit_api_router
-from fermerce.app.products.promo_code.api.v1 import router as promotion_code_api_router
-from fermerce.app.products.selling_units.api.v1 import router as selling_units_router
+from fermerce.app.products.reviews.api.v1 import (
+    router as review_unit_api_router,
+)
+from fermerce.app.products.promo_code.api.v1 import (
+    router as promotion_code_api_router,
+)
+from fermerce.app.products.selling_units.api.v1 import (
+    router as selling_units_router,
+)
 from fermerce.app.markets.status.api.v1 import router as status_api_router
 from fermerce.app.medias.api.v1 import router as medias_api_router
-from fermerce.app.users.address.api.v1 import router as shipping_address_api_router
+from fermerce.app.users.address.api.v1 import (
+    router as shipping_address_api_router,
+)
 from fermerce.app.markets.cart.api.v1 import router as cart_api_router
 
 

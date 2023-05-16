@@ -26,7 +26,9 @@ async def get_product_detail_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
     load_related: t.Optional[bool] = False,
 ):
     return await services.filter(
@@ -50,7 +52,9 @@ async def create_product_details(
 
 
 @router.get("/{detail_id}", response_model=schemas.IProductDetailsOut)
-async def get_product_detail(detail_id: uuid.UUID) -> schemas.IProductDetailsOut:
+async def get_product_detail(
+    detail_id: uuid.UUID,
+) -> schemas.IProductDetailsOut:
     return await services.get_detail(detail_id=detail_id)
 
 

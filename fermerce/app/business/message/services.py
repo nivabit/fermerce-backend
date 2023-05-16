@@ -37,7 +37,9 @@ async def update(
     raise error.ServerError("error updating message")
 
 
-async def get(message_id: uuid.UUID, load_related: bool = False) -> models.Message:
+async def get(
+    message_id: uuid.UUID, load_related: bool = False
+) -> models.Message:
     query = models.Message.filter(id=message_id)
     result = await filter_and_single(
         model=models.Message,

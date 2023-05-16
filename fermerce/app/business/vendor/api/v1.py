@@ -26,7 +26,9 @@ async def update_vendor_details(
     request: Request,
     user=Depends(dependency.require_vendor),
 ):
-    return await services.update(data_in=data_in, request=request, vendor_id=vendor_id, user=user)
+    return await services.update(
+        data_in=data_in, request=request, vendor_id=vendor_id, user=user
+    )
 
 
 @router.get(

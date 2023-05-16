@@ -42,11 +42,19 @@ async def filter_and_list(
     query = query.all().offset(offset).limit(limit)
     if sort_by == SortOrder.asc and bool(order_by):
         query = query.order_by(
-            *[f"-{col}" for col in order_by.split(",") if col in model._meta.fields]
+            *[
+                f"-{col}"
+                for col in order_by.split(",")
+                if col in model._meta.fields
+            ]
         )
     elif sort_by == SortOrder.desc and bool(order_by):
         query = query.order_by(
-            *[f"{col}" for col in order_by.split(",") if col in model._meta.fields]
+            *[
+                f"{col}"
+                for col in order_by.split(",")
+                if col in model._meta.fields
+            ]
         )
     else:
         query = query.order_by("-id")
@@ -65,7 +73,8 @@ async def filter_and_list(
             *[
                 col.strip()
                 for col in select.split(",")
-                if col.strip() in model._meta.fields and col.strip() not in to_pre_fetch
+                if col.strip() in model._meta.fields
+                and col.strip() not in to_pre_fetch
             ]
         )
     results = await query
@@ -128,11 +137,19 @@ async def filter_and_single(
     query = query
     if sort_by == SortOrder.asc and bool(order_by):
         query = query.order_by(
-            *[f"-{col}" for col in order_by.split(",") if col in model._meta.fields]
+            *[
+                f"-{col}"
+                for col in order_by.split(",")
+                if col in model._meta.fields
+            ]
         )
     elif sort_by == SortOrder.desc and bool(order_by):
         query = query.order_by(
-            *[f"{col}" for col in order_by.split(",") if col in model._meta.fields]
+            *[
+                f"{col}"
+                for col in order_by.split(",")
+                if col in model._meta.fields
+            ]
         )
     else:
         query = query.order_by("-id")
@@ -151,7 +168,8 @@ async def filter_and_single(
             *[
                 col.strip()
                 for col in select.split(",")
-                if col.strip() in model._meta.fields and col.strip() not in to_pre_fetch
+                if col.strip() in model._meta.fields
+                and col.strip() not in to_pre_fetch
             ]
         )
     result = await query.first()
@@ -161,19 +179,29 @@ async def filter_and_single(
     if load_related and result and not select:
         for field_name in model._meta.m2m_fields:
             if hasattr(result, field_name):
-                item[field_name] = remove_password(list(getattr(result, field_name)))
+                item[field_name] = remove_password(
+                    list(getattr(result, field_name))
+                )
         for field_name in model._meta.fk_fields:
             if getattr(result, field_name):
-                item[field_name] = remove_password(dict(getattr(result, field_name)))
+                item[field_name] = remove_password(
+                    dict(getattr(result, field_name))
+                )
         for field_name in model._meta.o2o_fields:
             if getattr(result, field_name):
-                item[field_name] = remove_password(dict(getattr(result, field_name)))
+                item[field_name] = remove_password(
+                    dict(getattr(result, field_name))
+                )
         for field_name in model._meta.backward_o2o_fields:
             if getattr(result, field_name):
-                item[field_name] = remove_password(dict(getattr(result, field_name)))
+                item[field_name] = remove_password(
+                    dict(getattr(result, field_name))
+                )
         for field_name in model._meta.backward_fk_fields:
             if getattr(result, field_name):
-                item[field_name] = remove_password(list(getattr(result, field_name)))
+                item[field_name] = remove_password(
+                    list(getattr(result, field_name))
+                )
     if load_related:
         return remove_password(dict(item, **dict(result)))
     return remove_password(dict(result))

@@ -10,7 +10,9 @@ async def update(
     data_in: schemas.IReviewIn,
     user: User,
 ) -> models.Review:
-    check_review = await models.Review.get_or_none(id=data_in.review_id, user=user)
+    check_review = await models.Review.get_or_none(
+        id=data_in.review_id, user=user
+    )
     if not check_review:
         raise error.NotFoundError("Product does not exist")
     if check_review.edit_limit == 3:

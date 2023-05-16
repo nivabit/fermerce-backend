@@ -24,7 +24,9 @@ async def create(data_in: schemas.ITrackIn) -> models.Tracking:
 
 
 # Todo: Make sure to check if the order that this item belongs to is payed for or not before they can add tracking
-async def update(track_id: uuid.UUID, data_in: schemas.ITrackIn) -> models.Tracking:
+async def update(
+    track_id: uuid.UUID, data_in: schemas.ITrackIn
+) -> models.Tracking:
     get_order_item = await OrderItem.get_or_none(
         tracking_id=data_in.order_item_tracking_id
     )
@@ -50,7 +52,9 @@ async def update(track_id: uuid.UUID, data_in: schemas.ITrackIn) -> models.Track
     raise error.ServerError("error updating order item tracking")
 
 
-async def get(track_id: uuid.UUID, load_related: bool = False) -> models.Tracking:
+async def get(
+    track_id: uuid.UUID, load_related: bool = False
+) -> models.Tracking:
     query = models.Tracking.filter(id=track_id)
     result = await filter_and_single(
         model=models.Tracking,
@@ -73,7 +77,8 @@ async def filter(
     query = models.Tracking.filter(order_item__tracking_id=order_item_id)
     if filter_string:
         query = query.filter(
-            Q(location__icontains=filter_string) | Q(node__icontains=filter_string)
+            Q(location__icontains=filter_string)
+            | Q(node__icontains=filter_string)
         )
     results = await filter_and_list(
         model=models.Tracking,

@@ -14,7 +14,10 @@ router = APIRouter(
 
 @router.post(
     "/",
-    dependencies=[Depends(require_user), Depends(AppAuth.verify_file_upload_api_key)],
+    dependencies=[
+        Depends(require_user),
+        Depends(AppAuth.verify_file_upload_api_key),
+    ],
 )
 async def create_resource(
     request: Request,
@@ -38,7 +41,10 @@ async def get_resource(uri: str) -> StreamingResponse:
 
 @router.get(
     "/{uri}/download",
-    dependencies=[Depends(require_user), Depends(AppAuth.verify_file_upload_api_key)],
+    dependencies=[
+        Depends(require_user),
+        Depends(AppAuth.verify_file_upload_api_key),
+    ],
 )
 async def download_resource(uri: str) -> StreamingResponse:
     return await services.download(uri)
@@ -46,7 +52,10 @@ async def download_resource(uri: str) -> StreamingResponse:
 
 @router.delete(
     "/{uri}",
-    dependencies=[Depends(require_user), Depends(AppAuth.verify_file_upload_api_key)],
+    dependencies=[
+        Depends(require_user),
+        Depends(AppAuth.verify_file_upload_api_key),
+    ],
 )
 async def delete_one_resource(uri: str) -> None:
     return await services.delete_one(uri)
@@ -54,7 +63,10 @@ async def delete_one_resource(uri: str) -> None:
 
 @router.delete(
     "/",
-    dependencies=[Depends(require_user), Depends(AppAuth.verify_file_upload_api_key)],
+    dependencies=[
+        Depends(require_user),
+        Depends(AppAuth.verify_file_upload_api_key),
+    ],
 )
 async def delete_many_resource(data_in: schemas.IMediaDeleteIn) -> None:
     return await services.delete_many(data_in)

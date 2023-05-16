@@ -25,7 +25,9 @@ async def get_users_current_data(
 ) -> t.Union[schemas.IUserOutFull, schemas.IUserOut]:
     if not user.get("user_id", None):
         raise error.UnauthorizedError()
-    return await services.get_user(user.get("user_id", None), load_related=load_related)
+    return await services.get_user(
+        user.get("user_id", None), load_related=load_related
+    )
 
 
 @router.post("/password/reset-link", status_code=status.HTTP_200_OK)
@@ -57,6 +59,12 @@ async def update_user_password_no_token(
     return await services.update_users_password_no_token(data_in, user_data)
 
 
-@router.post("/check/dev", status_code=status.HTTP_200_OK, response_model=IResponseMessage)
-async def check_user_email(data_in: schemas.ICheckUserEmail) -> IResponseMessage:
+@router.post(
+    "/check/dev",
+    status_code=status.HTTP_200_OK,
+    response_model=IResponseMessage,
+)
+async def check_user_email(
+    data_in: schemas.ICheckUserEmail,
+) -> IResponseMessage:
     return await services.check_user_email(data_in)

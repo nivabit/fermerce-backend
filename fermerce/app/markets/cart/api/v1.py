@@ -59,7 +59,9 @@ async def get_carts(
 
 
 @router.get("/{cart_id}", status_code=status.HTTP_200_OK)
-async def get_cart(cart_id: uuid.UUID, user: User = Depends(dependency.require_user)):
+async def get_cart(
+    cart_id: uuid.UUID, user: User = Depends(dependency.require_user)
+):
     return await services.get(cart_id, user.id)
 
 

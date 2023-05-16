@@ -41,4 +41,6 @@ async def get_review_count():
     status_code=status.HTTP_200_OK,
 )
 async def get_products_reviews(product_id: uuid.UUID, page: int, per_page: int):
-    return await services.get_product_reviews(product_id=product_id, page=page, per_page=per_page)
+    return await services.get_product_reviews(
+        product_id=product_id, page=page, per_page=per_page
+    )

@@ -27,7 +27,9 @@ async def create(data_in: schemas.ICartIn, user: User) -> models.Cart:
             f"only {selling_unit.size} of {get_product.name} left for this product"
         )
     else:
-        selling_unit.update_from_dict(dict(size=selling_unit.size - data_in.quantity))
+        selling_unit.update_from_dict(
+            dict(size=selling_unit.size - data_in.quantity)
+        )
         await selling_unit.save()
 
     new_cart = await Cart.create(
@@ -67,17 +69,25 @@ async def update(
     if get_cart.quantity != data_in.quantity:
         if data_in.quantity < get_cart.quantity:
             selling_unit.update_from_dict(
-                dict(size=selling_unit.size + (get_cart.quantity - data_in.quantity))
+                dict(
+                    size=selling_unit.size
+                    + (get_cart.quantity - data_in.quantity)
+                )
             )
             await selling_unit.save()
         if selling_unit.size > get_cart.quantity:
             selling_unit.update_from_dict(
-                dict(size=selling_unit.size + (get_cart.quantity - data_in.quantity))
+                dict(
+                    size=selling_unit.size
+                    + (get_cart.quantity - data_in.quantity)
+                )
             )
             await selling_unit.save()
 
     else:
-        selling_unit.update_from_dict(dict(size=selling_unit.size - data_in.quantity))
+        selling_unit.update_from_dict(
+            dict(size=selling_unit.size - data_in.quantity)
+        )
         await selling_unit.save()
 
     get_cart.update_from_dict(quantity=data_in.quantity)
@@ -126,7 +136,9 @@ async def delete(cart_id: uuid.UUID, user: User):
     get_cart = await Cart.get_or_none(id=cart_id, user=user)
     if not get_cart:
         raise error.NotFoundError("Cart not found")
-    get_selling_unit = await ProductSellingUnit.get_or_none(id=get_cart.selling_unit.id)
+    get_selling_unit = await ProductSellingUnit.get_or_none(
+        id=get_cart.selling_unit.id
+    )
     if get_selling_unit:
         get_selling_unit.update_from_dict(size=get_cart.quantity)
         await get_selling_unit.save()

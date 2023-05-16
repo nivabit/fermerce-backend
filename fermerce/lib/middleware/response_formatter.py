@@ -25,7 +25,9 @@ async def transform(s: t.Union[str, bytearray, bytes], status_code: int):
     if status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
         try:
             data: dict = json.loads(s)
-            response_data["error"] = {k.get("loc")[-1]: k.get("msg") for k in data["detail"]}
+            response_data["error"] = {
+                k.get("loc")[-1]: k.get("msg") for k in data["detail"]
+            }
         except Exception:
             response_data["error"] = s
         finally:
@@ -48,9 +50,14 @@ async def transform(s: t.Union[str, bytearray, bytes], status_code: int):
 async def response_data_transformer(request: Request, call_next):
     response: Response = await call_next(request)
     try:
-        content_type: str = str(response.headers.get("content-type", None)).lower()
+        content_type: str = str(
+            response.headers.get("content-type", None)
+        ).lower()
         exclude_url: str = str(request.url).split("/")[-1].lower()
-        if content_type.split(";")[0] == "text/html" or exclude_url == "openapi.json":
+        if (
+            content_type.split(";")[0] == "text/html"
+            or exclude_url == "openapi.json"
+        ):
             return response
         response_body = [chunk async for chunk in response.body_iterator]
         response.body_iterator = iterate_in_threadpool(iter(response_body))

@@ -31,7 +31,9 @@ def create_producer(queue: kombu.Queue, content_type: str = "application/json"):
     return produce
 
 
-def create_consumer(queue: kombu.Queue, callback_fun: t.Callable[..., t.Any], accept=["json"]):
+def create_consumer(
+    queue: kombu.Queue, callback_fun: t.Callable[..., t.Any], accept=["json"]
+):
     consumer = kombu.Consumer(
         connection,
         queues=[queue],
@@ -65,8 +67,12 @@ def discover(directory, recursive=True):
         for name in files:
             if name.endswith(".py"):
                 module_path = os.path.join(root, name)
-                module_name = os.path.splitext(module_path)[0].replace(os.path.sep, ".")
-                module_spec = importlib.util.spec_from_file_location(module_name, module_path)
+                module_name = os.path.splitext(module_path)[0].replace(
+                    os.path.sep, "."
+                )
+                module_spec = importlib.util.spec_from_file_location(
+                    module_name, module_path
+                )
 
                 module = importlib.util.module_from_spec(module_spec)
                 module_spec.loader.exec_module(module)

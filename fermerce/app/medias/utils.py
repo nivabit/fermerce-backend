@@ -6,7 +6,9 @@ import mimetypes
 from fermerce.lib.errors import error
 
 
-async def compress_file(file: UploadFile, max_size: int = 200) -> t.Tuple[bytes, str]:
+async def compress_file(
+    file: UploadFile, max_size: int = 200
+) -> t.Tuple[bytes, str]:
     # Read the file contents
     contents = await file.read()
 
@@ -32,7 +34,8 @@ async def compress_file(file: UploadFile, max_size: int = 200) -> t.Tuple[bytes,
 
             # Decrease the quality and try again
             image = image.resize(
-                (int(image.size[0] * 0.9), int(image.size[1] * 0.9)), Image.ANTIALIAS
+                (int(image.size[0] * 0.9), int(image.size[1] * 0.9)),
+                Image.ANTIALIAS,
             )
 
         # Return the compressed image

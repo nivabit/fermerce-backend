@@ -21,7 +21,9 @@ class Mailer(template_finder.MailTemplate):
         sender_password: Optional[str] = config.admin_password,
         email_host: Optional[str] = config.email_host,
         email_server_port: Optional[int] = config.email_port,
-        template_folder: Optional[pydantic.DirectoryPath] = config.email_template_dir,
+        template_folder: Optional[
+            pydantic.DirectoryPath
+        ] = config.email_template_dir,
         website_name: str = config.project_name,
         use_google: Optional[bool] = True,
         body: Optional[str] = None,
@@ -76,12 +78,16 @@ class Mailer(template_finder.MailTemplate):
             body_content = self.body
             message.attach(text.MIMEText(body_content, "plain"))
         else:
-            raise exception.InvalidEmailContentError("Email body content is required")
+            raise exception.InvalidEmailContentError(
+                "Email body content is required"
+            )
         if self.attachments:
             for attachment in self.attachments:
                 message.attach(attachment)
         try:
-            with smtplib.SMTP_SSL(host=self.email_host, port=self.email_server_port) as smtp:
+            with smtplib.SMTP_SSL(
+                host=self.email_host, port=self.email_server_port
+            ) as smtp:
                 smtp.login(
                     user=self.admin_email,
                     password=self.admin_password,

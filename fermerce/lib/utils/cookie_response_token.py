@@ -14,7 +14,9 @@ def create_response_cookies(
     user: ModelType, background_task: BackgroundTasks, request: Request
 ) -> t.Union[Response, bool]:
     get_jwt_data_for_encode = schema.IToEncode(user_id=str(user.id))
-    access_token, refresh_token = JWTAUTH.jwt_encoder(data=get_jwt_data_for_encode.dict())
+    access_token, refresh_token = JWTAUTH.jwt_encoder(
+        data=get_jwt_data_for_encode.dict()
+    )
 
     if access_token and refresh_token:
         background_task.add_task(
@@ -61,7 +63,9 @@ def update_response_cookies(
     user: ModelType, background_task: BackgroundTasks, request: Request
 ) -> t.Union[Request, bool]:
     get_jwt_data_for_encode = schema.IToEncode(user_id=str(user.id))
-    access_token, refresh_token = JWTAUTH.jwt_encoder(data=get_jwt_data_for_encode.dict())
+    access_token, refresh_token = JWTAUTH.jwt_encoder(
+        data=get_jwt_data_for_encode.dict()
+    )
     if access_token and refresh_token:
         background_task.add_task(
             auth_token_repo.create,

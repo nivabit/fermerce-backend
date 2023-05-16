@@ -40,7 +40,9 @@ async def get_permission_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
 ):
     return await services.filter(
         filter_string=filter_string,
@@ -69,7 +71,9 @@ async def get_permission(permission_id: uuid.UUID) -> schemas.IPermissionOut:
 async def update_permission(
     permission_id: uuid.UUID, permission: schemas.IPermissionIn
 ) -> schemas.IPermissionOut:
-    return await services.update(permission_id=permission_id, data_in=permission)
+    return await services.update(
+        permission_id=permission_id, data_in=permission
+    )
 
 
 @router.get(

@@ -13,7 +13,9 @@ from fastapi import Response
 async def create(
     data_in: schemas.IProductCategoryIn,
 ) -> models.ProductCategory:
-    check_product_category = await models.ProductCategory.get_or_none(name=data_in.name)
+    check_product_category = await models.ProductCategory.get_or_none(
+        name=data_in.name
+    )
     if check_product_category:
         raise error.DuplicateError("product category already exists")
     new_type = await models.ProductCategory.create(**data_in.dict())
@@ -25,7 +27,9 @@ async def create(
 async def get(
     product_category_id: uuid.UUID,
 ) -> models.ProductCategory:
-    product_category = await models.ProductCategory.get_or_none(id=product_category_id)
+    product_category = await models.ProductCategory.get_or_none(
+        id=product_category_id
+    )
     if not product_category:
         raise error.NotFoundError("product category not found")
     return product_category

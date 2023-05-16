@@ -19,7 +19,9 @@ class MailTemplate:
                 autoescape=jj2.select_autoescape(),
             )
         except TemplateNotFound:
-            raise EmailTemplateNotFoundError(f"Template not found in {self.template_folder}")
+            raise EmailTemplateNotFoundError(
+                f"Template not found in {self.template_folder}"
+            )
 
     def render(
         self,

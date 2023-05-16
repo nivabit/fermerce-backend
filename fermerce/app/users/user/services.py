@@ -97,7 +97,9 @@ async def filter(
     query = None
     if search_type == SearchType._or:
         query = models.User.filter(
-            Q(is_active=is_active) | Q(is_archived=is_archived) | Q(is_suspended=is_suspended)
+            Q(is_active=is_active)
+            | Q(is_archived=is_archived)
+            | Q(is_suspended=is_suspended)
         )
     else:
         query = models.User.filter(
@@ -162,7 +164,9 @@ async def reset_password_link(
                 else users_obj.username,
             )
         )
-        return IResponseMessage(message="account need to be verified, before reset their password")
+        return IResponseMessage(
+            message="account need to be verified, before reset their password"
+        )
     if not users_obj:
         raise error.NotFoundError("User not found")
     token = security.JWTAUTH.data_encoder(
@@ -189,20 +193,26 @@ async def update_user_password(
 ) -> IResponseMessage:
     token_data: dict = security.JWTAUTH.data_decoder(encoded_data=data_in.token)
     if token_data and token_data.get("user_id", None):
-        users_obj = await models.User.get_or_none(id=token_data.get("user_id", None))
+        users_obj = await models.User.get_or_none(
+            id=token_data.get("user_id", None)
+        )
         if not users_obj:
             raise error.NotFoundError("User not found")
         if users_obj.reset_token != data_in.token:
             raise error.UnauthorizedError()
         if users_obj.check_password(data_in.password.get_secret_value()):
-            raise error.BadDataError("Try another password you have not used before")
+            raise error.BadDataError(
+                "Try another password you have not used before"
+            )
         token = security.JWTAUTH.data_encoder(
             data={"user_id": str(users_obj.id)}, duration=timedelta(days=1)
         )
         if token:
             await models.User.filter(id=users_obj.id).update(
                 reset_token=token,
-                password=models.User.generate_hash(data_in.password.get_secret_value()),
+                password=models.User.generate_hash(
+                    data_in.password.get_secret_value()
+                ),
             )
             await tasks.send_verify_users_password_reset.kiq(
                 dict(
@@ -227,7 +237,9 @@ async def update_users_password_no_token(
         raise error.BadDataError("Old password is incorrect")
 
     if user_obj.check_password(data_in.password.get_secret_value()):
-        raise error.BadDataError("Try another password you have not used before")
+        raise error.BadDataError(
+            "Try another password you have not used before"
+        )
     if await user_obj.update_from_dict(
         password=models.User.generate_hash(data_in.password.get_secret_value())
     ):
@@ -248,9 +260,13 @@ async def remove_users_data(data_in: schemas.IUserRemove) -> None:
         if data_in.permanent:
             await models.User.filter(id=user_to_remove.id).delete()
         else:
-            await models.User.filter(id=user_to_remove.id).update(is_archived=True)
+            await models.User.filter(id=user_to_remove.id).update(
+                is_archived=True
+            )
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    raise error.NotFoundError(f"User with  user id {data_in.user_id} does not exist")
+    raise error.NotFoundError(
+        f"User with  user id {data_in.user_id} does not exist"
+    )
 
 
 async def get_total_users():
@@ -258,10 +274,14 @@ async def get_total_users():
     return ITotalCount(count=total_count).dict()
 
 
-async def get_user(user_id: uuid.UUID, load_related: bool = False) -> models.User:
+async def get_user(
+    user_id: uuid.UUID, load_related: bool = False
+) -> models.User:
     query = models.User.filter(id=user_id)
     try:
-        result = await filter_and_single(model=models.User, query=query, load_related=load_related)
+        result = await filter_and_single(
+            model=models.User, query=query, load_related=load_related
+        )
         if not result:
             raise error.NotFoundError("No user with the provided credential")
         if load_related:
@@ -272,7 +292,9 @@ async def get_user(user_id: uuid.UUID, load_related: bool = False) -> models.Use
         raise error.ServerError(f"Error getting user data {e}")
 
 
-async def check_user_email(data_in: schemas.ICheckUserEmail) -> IResponseMessage:
+async def check_user_email(
+    data_in: schemas.ICheckUserEmail,
+) -> IResponseMessage:
     check_user = await models.User.get_or_none(
         Q(email=data_in.username) | Q(username=data_in.username)
     )

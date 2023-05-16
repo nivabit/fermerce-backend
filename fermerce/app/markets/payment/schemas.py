@@ -94,6 +94,8 @@ class IPaymentLinkData(pyd.BaseModel):
     amount: int
     tx_ref: str
     currency: enum.PaymentCurrency = enum.PaymentCurrency.NGN
-    redirect_url: str = "https://webhook.site/9d0b00ba-9a69-44fa-a43d-a82c33c36fdc"
+    redirect_url: str = (
+        "https://webhook.site/9d0b00ba-9a69-44fa-a43d-a82c33c36fdc"
+    )
     user: ICustomer
     meta: PaymentMeta

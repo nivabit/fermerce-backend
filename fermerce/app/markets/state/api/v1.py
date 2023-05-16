@@ -42,7 +42,9 @@ async def get_state_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
 ):
     return await services.filter(
         filter_string=filter_string,
@@ -68,7 +70,9 @@ async def get_state(state_id: uuid.UUID) -> schemas.IStateOut:
     response_model=schemas.IStateOut,
     # dependencies=[Depends(require_super_admin_or_admin)],
 )
-async def update_state(state_id: uuid.UUID, type: schemas.IStateIn) -> schemas.IStateOut:
+async def update_state(
+    state_id: uuid.UUID, type: schemas.IStateIn
+) -> schemas.IStateOut:
     return await services.update(state_id=state_id, data_in=type)
 
 

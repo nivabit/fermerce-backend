@@ -8,7 +8,9 @@ from fermerce.app.medias.drives import product_drive
 
 
 async def create(
-    request: Request, media_objs: t.Optional[t.List[UploadFile]], desire_alt: str = None
+    request: Request,
+    media_objs: t.Optional[t.List[UploadFile]],
+    desire_alt: str = None,
 ):
     try:
         bad_types = models.Media.check_file_type(

@@ -29,7 +29,9 @@ async def get_product_detail_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
     load_related: t.Optional[bool] = False,
 ):
     return await services.filter(
@@ -47,7 +49,9 @@ async def get_product_detail_list(
 async def get_selling_unit(
     selling_unit_id: uuid.UUID, user: User = Depends(require_vendor)
 ) -> schemas.IProductSellingUnitOut:
-    return await services.get_selling_unit(selling_unit_id=selling_unit_id, user=user)
+    return await services.get_selling_unit(
+        selling_unit_id=selling_unit_id, user=user
+    )
 
 
 @router.put("/", response_model=schemas.IProductSellingUnitOut)
@@ -59,11 +63,16 @@ async def update_selling_unit(
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_selling_unit(
-    data_in: schemas.IProductRemoveSellingUnitIn, user: User = Depends(require_vendor)
+    data_in: schemas.IProductRemoveSellingUnitIn,
+    user: User = Depends(require_vendor),
 ) -> None:
     return await services.delete(data_in=data_in, user=user)
 
 
 @router.get("/", response_model=t.List[schemas.IProductSellingUnitOut])
-async def get_product_selling_unit(product_id: uuid.UUID, user: User = Depends(require_vendor)):
-    return await services.get_product_selling_units(product_id=product_id, user=user)
+async def get_product_selling_unit(
+    product_id: uuid.UUID, user: User = Depends(require_vendor)
+):
+    return await services.get_product_selling_units(
+        product_id=product_id, user=user
+    )

@@ -18,7 +18,9 @@ async def create_payment(
     obj: schemas.IPaymentIn,
     user: User,
 ) -> Response:
-    get_order = await Order.get_or_none(id=obj.order_id, user=user).prefetch_related("items")
+    get_order = await Order.get_or_none(
+        id=obj.order_id, user=user
+    ).prefetch_related("items")
     if not get_order:
         raise error.NotFoundError("order not found")
     if not get_order.items:
@@ -26,7 +28,9 @@ async def create_payment(
     total_price = utils.get_product_total_price(get_order.items)
     if total_price > 0:
         await models.Payment.create(order=get_order, total_payed=total_price)
-        meta_data = schemas.PaymentMeta(order_id=get_order.order_id, user_id=user.id)
+        meta_data = schemas.PaymentMeta(
+            order_id=get_order.order_id, user_id=user.id
+        )
         user = schemas.User(
             email=user.email,
             name=f"{user.firstname} {user.lastname}",
@@ -41,7 +45,9 @@ async def create_payment(
             user=user.dict(),
             redirect_url=f"{config.project_url}/dashboard/payment/{get_order.order_id}",
         )
-        data_out: schemas.IPaymentResponse = await utils.generate_link(data_in=payment_data)
+        data_out: schemas.IPaymentResponse = await utils.generate_link(
+            data_in=payment_data
+        )
         if data_out.status == "success":
             return schemas.IPaymentInitOut(
                 paymentLink=data_out.data_in.link,
@@ -51,7 +57,9 @@ async def create_payment(
 
 
 async def get_payment(payment_id: uuid.UUID, user: User) -> model.Payment:
-    get_payment = await payment_repo.get_by_attr(attr=dict(id=payment_id), load_related=True)
+    get_payment = await payment_repo.get_by_attr(
+        attr=dict(id=payment_id), load_related=True
+    )
     if get_payment and get_payment.order.user_id != user.id:
         raise error.NotFoundError("Payment not found")
     return get_payment
@@ -104,7 +112,9 @@ async def get_revenue_sum_in_date_range(
     data_in: schemas.IPaymentRevenueInDateRange,
 ) -> t.Optional[float]:
     result = await payment_repo.get_sum_for_date_range(
-        start_date=data_in.start_date, end_date=data_in.end_date, freq=data_in.freq
+        start_date=data_in.start_date,
+        end_date=data_in.end_date,
+        freq=data_in.freq,
     )
     return result
 
@@ -121,7 +131,9 @@ async def verify_user_payment(
     if get_payment.completed:
         raise error.BadDataError("Invalid payment details was provided")
     try:
-        check_payment: schemas.IPaymentVerifyOut = utils.verify_payment(tx_ref=data_in.reference)
+        check_payment: schemas.IPaymentVerifyOut = utils.verify_payment(
+            tx_ref=data_in.reference
+        )
         if check_payment.error:
             raise error.BadDataError("verification failed")
         get_order = await order_repo.get_by_attr(
@@ -138,7 +150,9 @@ async def verify_user_payment(
 
         if update_payment:
             for product in get_order.items:
-                await product_review_repo.create(obj=dict(user=user, product=product))
+                await product_review_repo.create(
+                    obj=dict(user=user, product=product)
+                )
             return IResponseMessage(message="payment successful")
     except Exception:
         raise error.ServerError("verification failed")

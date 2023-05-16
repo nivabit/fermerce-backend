@@ -16,10 +16,14 @@ from fastapi import Response
 async def create(
     data_in: schemas.IProductSellingUnitIn, user: User
 ) -> models.ProductSellingUnit:
-    get_product = await Product.get_or_none(pk=data_in.product_id, vendor=user.vendor)
+    get_product = await Product.get_or_none(
+        pk=data_in.product_id, vendor=user.vendor
+    )
     if not get_product:
         raise error.NotFoundError("Product not found")
-    get_measuring_unit = await MeasuringUnit.get_or_none(id=data_in.selling_unit_id)
+    get_measuring_unit = await MeasuringUnit.get_or_none(
+        id=data_in.selling_unit_id
+    )
     check_existing_unit = await models.ProductSellingUnit.get_or_none(
         unit=get_measuring_unit, product=get_product
     )
@@ -113,12 +117,16 @@ async def update(
 async def delete(
     data_in: schemas.IProductRemoveSellingUnitIn, user: User
 ) -> models.ProductSellingUnit:
-    get_product = await Product.get_or_none(id=data_in.product_id, vendor=user.vendor)
+    get_product = await Product.get_or_none(
+        id=data_in.product_id, vendor=user.vendor
+    )
     if not get_product:
         raise error.NotFoundError("product not found")
     selling_unit = await models.ProductSellingUnit.filter(
         product=data_in.product_id, id__in=data_in.selling_unit_ids
     ).delete()
     if not selling_unit:
-        raise error.NotFoundError("selling unit(s) does not exists for this product")
+        raise error.NotFoundError(
+            "selling unit(s) does not exists for this product"
+        )
     return Response(status_code=status.HTTP_204_NO_CONTENT)

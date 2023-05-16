@@ -23,5 +23,7 @@ async def get_payment_revenue_trend():
     status_code=status.HTTP_200_OK,
     response_model=schema.IPaymentTrend,
 )
-async def get_revenue_sum_in_date_range(data_in: schema.IPaymentRevenueInDateRange):
+async def get_revenue_sum_in_date_range(
+    data_in: schema.IPaymentRevenueInDateRange,
+):
     return await service.get_revenue_sum_in_date_range(data_in=data_in)

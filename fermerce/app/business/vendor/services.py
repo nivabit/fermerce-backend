@@ -46,12 +46,17 @@ async def create(user: User, request: Request, data_in=schemas.IVendorIn):
             get_countries = await Country.filter(id__in=data_in.countries)
             if get_countries:
                 await new_vendor.countries.add(*get_countries)
-        return IResponseMessage(message="Vendor account was created successfully")
+        return IResponseMessage(
+            message="Vendor account was created successfully"
+        )
     raise error.ServerError("Error creating business account")
 
 
 async def update(
-    vendor_id: uuid.UUID, user: User, request: Request, data_in=schemas.IVendorIn
+    vendor_id: uuid.UUID,
+    user: User,
+    request: Request,
+    data_in=schemas.IVendorIn,
 ):
     check_vendor = await models.Vendor.get_or_none(user=user.id)
     if not check_vendor:
@@ -67,7 +72,9 @@ async def update(
     to_update = dict(business_name=data_in.business_name)
     if data_in.logo:
         logo = await Media.create(
-            url=Media.convert_image_name_to_url(media_url=data_in.logo, request=request)
+            url=Media.convert_image_name_to_url(
+                media_url=data_in.logo, request=request
+            )
         )
         to_update.update({"logo": logo})
     check_vendor.update_from_dict(to_update)

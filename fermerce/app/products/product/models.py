@@ -26,12 +26,16 @@ class Product(models.Model):
         default=f"PR-{str(uuid.uuid4()).split('-')[-1]}",
         unique=True,
     )
-    cover_media = fields.ForeignKeyField("models.Media", related_name="cover_media", null=True)
+    cover_media = fields.ForeignKeyField(
+        "models.Media", related_name="cover_media", null=True
+    )
     galleries = fields.ManyToManyField(
         "models.Media",
         related_name="product_galleries",
     )
-    categories: fields.ManyToManyRelation[ProductCategory] = fields.ManyToManyField(
+    categories: fields.ManyToManyRelation[
+        ProductCategory
+    ] = fields.ManyToManyField(
         "models.ProductCategory", related_name="products"
     )
     measurement_units: fields.ForeignKeyRelation[ProductSellingUnit]

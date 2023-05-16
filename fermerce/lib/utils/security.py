@@ -40,7 +40,12 @@ class JWTAUTH:
             if duration:
                 to_encode.update({"exp": datetime.utcnow() + duration})
             else:
-                to_encode.update({"exp": datetime.utcnow() + config.get_refresh_expires_time()})
+                to_encode.update(
+                    {
+                        "exp": datetime.utcnow()
+                        + config.get_refresh_expires_time()
+                    }
+                )
             encoded_data = jwt.encode(
                 claims=to_encode,
                 key=secret_key if secret_key else config.refresh_secret_key,
@@ -48,7 +53,9 @@ class JWTAUTH:
             )
             return encoded_data
         except JWTError:
-            raise error.ServerError("Could not complete request please try again")
+            raise error.ServerError(
+                "Could not complete request please try again"
+            )
 
     @staticmethod
     def jwt_encoder(
@@ -59,10 +66,16 @@ class JWTAUTH:
         refresh_data = data.copy()
         if duration:
             access_data.update({"exp": datetime.utcnow() + duration})
-            refresh_data.update({"exp": datetime.utcnow() + config.get_refresh_expires_time()})
+            refresh_data.update(
+                {"exp": datetime.utcnow() + config.get_refresh_expires_time()}
+            )
         else:
-            access_data.update({"exp": datetime.utcnow() + config.get_access_expires_time()})
-            refresh_data.update({"exp": datetime.utcnow() + config.get_refresh_expires_time()})
+            access_data.update(
+                {"exp": datetime.utcnow() + config.get_access_expires_time()}
+            )
+            refresh_data.update(
+                {"exp": datetime.utcnow() + config.get_refresh_expires_time()}
+            )
         try:
             encode_jwt_refresh = jwt.encode(
                 claims=refresh_data,

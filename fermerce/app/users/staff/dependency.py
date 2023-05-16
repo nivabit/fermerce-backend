@@ -32,7 +32,9 @@ async def require_super_admin(get_user: dict = Depends(AppAuth.authenticate)):
     raise error.UnauthorizedError()
 
 
-async def require_super_admin_or_admin(get_user: dict = Depends(AppAuth.authenticate)):
+async def require_super_admin_or_admin(
+    get_user: dict = Depends(AppAuth.authenticate),
+):
     staff = await Staff.get_or_none(user=get_user.get("user_id", None))
     if staff:
         perm = await staff.permissions.filter(name__in=["super_admin", "admin"])

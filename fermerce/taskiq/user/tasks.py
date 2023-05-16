@@ -6,7 +6,9 @@ from fermerce.core.settings import config
 
 @broker.task
 def send_users_activation_email(user: dict):
-    token: str = security.JWTAUTH.data_encoder(data={"user_id": str(user.get("id"))})
+    token: str = security.JWTAUTH.data_encoder(
+        data={"user_id": str(user.get("id"))}
+    )
     url = f"{config.project_url}/auth/activateAccount?activate_token={token}&auth_type= user"
     mail_template_context = {
         "url": url,
@@ -30,7 +32,9 @@ def send_users_activation_email(user: dict):
 
 @broker.task
 def send_email_verification_email(user: dict):
-    token: str = security.JWTAUTH.data_encoder(data={"user_id": str(user.get("id"))})
+    token: str = security.JWTAUTH.data_encoder(
+        data={"user_id": str(user.get("id"))}
+    )
     url = f"{config.project_url}/auth/activateAccount?activate_token={token}&auth_type= user"
     mail_template_context = {
         "url": url,

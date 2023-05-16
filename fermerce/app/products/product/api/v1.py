@@ -38,7 +38,9 @@ async def get_products_list(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
     is_suspended: t.Optional[bool] = False,
     in_stock: t.Optional[bool] = False,
     search_type: t.Optional[SearchType] = SearchType._and,
@@ -70,7 +72,9 @@ async def update_product(
     data_in: schemas.IProductIn,
     user: User = Depends(dependency.require_vendor),
 ) -> schemas.IProductListOut:
-    return await services.update(user=user, product_id=product_id, data_in=data_in, request=request)
+    return await services.update(
+        user=user, product_id=product_id, data_in=data_in, request=request
+    )
 
 
 @router.get(

@@ -26,6 +26,7 @@ from fermerce.app.markets.cart.api.v1 import router as cart_api_router
 from fermerce.app.markets.order.api.v1 import router as order_api_router
 
 from fermerce.app.markets.tracking.api.v1 import router as tracking_api_router
+from fermerce.app.business.message.api.v1 import router as message_api_router
 
 # from fermerce.app.markets.payment.api.v1 import router as payment_api_router
 
@@ -48,4 +49,5 @@ router.include_router(router=cart_api_router)
 router.include_router(router=order_api_router)
 router.include_router(router=review_unit_api_router)
 router.include_router(router=tracking_api_router)
+router.include_router(router=message_api_router)
 # router.include_router(router=payment_api_router)

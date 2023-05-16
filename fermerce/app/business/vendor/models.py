@@ -11,13 +11,15 @@ from fermerce.app.users.user.models import User
 class Vendor(models.Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
     business_name = fields.CharField(max_length=30, null=False)
-    logo = fields.ForeignKeyField("models.Media")
+    logo = fields.ForeignKeyField("models.Media", null=True)
     states: fields.ManyToManyRelation[State] = fields.ManyToManyField("models.State")
     user: fields.ForeignKeyRelation[User] = fields.OneToOneField(
         "models.User", related_name="vendor"
     )
     rating = fields.FloatField(default=0.0, null=True)
-    countries: fields.ManyToManyRelation[Country] = fields.ManyToManyField("models.Country")
+    countries: fields.ManyToManyRelation[Country] = fields.ManyToManyField(
+        "models.Country"
+    )
     is_suspended = fields.BooleanField(default=False)
     is_active = fields.BooleanField(default=True)
     is_archived = fields.BooleanField(default=False)

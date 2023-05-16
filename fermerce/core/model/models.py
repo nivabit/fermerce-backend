@@ -25,3 +25,4 @@ from fermerce.app.products.reviews.models import Review
 from fermerce.app.markets.status.models import Status
 from fermerce.app.products.product.models import Product, ProductDetail
 from fermerce.app.markets.tracking.models import Tracking
+from fermerce.app.business.message.models import Message

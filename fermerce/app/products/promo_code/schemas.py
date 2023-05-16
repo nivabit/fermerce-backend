@@ -8,11 +8,15 @@ from fermerce.lib.utils.random_string import random_str
 
 
 class IProductPromoCodeBase(pyd.BaseModel):
-    code: pyd.constr(max_length=10, min_length=4, strip_whitespace=True) = random_str(10)
-    discount: t.Optional[float]
+    code: pyd.constr(max_length=10, min_length=4, strip_whitespace=True) = random_str(
+        10
+    )
+    discount: t.Optional[float] = 0.1
     single: bool = True
-    start: t.Optional[datetime.date] = datetime.datetime.today()
-    end: t.Optional[datetime.date] = datetime.datetime.today() + datetime.timedelta(days=7)
+    start: t.Optional[datetime.date] = datetime.datetime.utcnow().date()
+    end: t.Optional[
+        datetime.date
+    ] = datetime.datetime.utcnow().date() + datetime.timedelta(days=7)
 
 
 class IProductPromoCodeIn(IProductPromoCodeBase):
@@ -32,9 +36,13 @@ class IProductPromoCodeRemoveIn(pyd.BaseModel):
     #     schema_extra = {"example": {"code": "12343439klf3", }}
 
 
-class IProductPromoCodeOut(IProductPromoCodeIn):
+class IProductPromoCodeOut(pyd.BaseModel):
     id: t.Optional[uuid.UUID]
-    pass
+    code: t.Optional[str]
+    discount: t.Optional[float]
+    single: t.Optional[bool]
+    active_from: t.Optional[datetime.date]
+    active_to: t.Optional[datetime.date]
 
     class Config:
         orm_mode = True
@@ -42,9 +50,9 @@ class IProductPromoCodeOut(IProductPromoCodeIn):
             "example": {
                 "id": "12345678-1234-1234-1234-123456789abc",
                 "code": "12343439klf3",
-                "discount": 10.0,
-                "start": "12345678-1234-1234",
-                "end": "12345678-1234-1234",
+                "discount": 0.3,
+                "start": "2022-10-25",
+                "end": "2022-10-30",
                 "created_at": "2022-10-25",
                 "updated_at": "2022-10-25",
             }

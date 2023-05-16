@@ -1,4 +1,5 @@
 import typing as t
+import uuid
 from fastapi import APIRouter, Depends, Query, status
 from fermerce.app.markets.order import schemas, services
 from fermerce.app.users.user.models import User
@@ -45,10 +46,38 @@ async def get_user_orders(
 
 
 @router.get("/{order_id}")
-async def get_order(order_id: str, user: User = Depends(require_user)):
-    return await services.get_order(order_id=order_id, user=user)
+async def get_order(
+    order_id: uuid.UUID, user: User = Depends(require_user), load_related: bool = False
+):
+    return await services.get_order(
+        order_id=order_id,
+        user=user,
+        load_related=load_related,
+    )
+
+
+@router.post("/promo_codes")
+async def get_order(
+    data_in: schemas.IOrderUpdatePromoCodeIn, user: User = Depends(require_user)
+):
+    return await services.add_promo_code(
+        data_in=data_in,
+        user=user,
+    )
 
 
 @router.get("/{order_id}/items")
-async def get_order_items(order_id: str, user: User = Depends(require_user)):
-    return await services.get_order_items(order_id=order_id, user=user)
+async def get_order_items(
+    order_id: str,
+    user: User = Depends(require_user),
+    load_related: bool = False,
+    per_page: int = 10,
+    page: int = 1,
+):
+    return await services.get_order_items(
+        order_id=order_id,
+        user=user,
+        load_related=load_related,
+        page=page,
+        per_page=per_page,
+    )

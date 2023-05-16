@@ -26,7 +26,9 @@ async def get_all_orders(
     sort_by: t.Optional[SortOrder] = Query(
         default=SortOrder.desc, description="order by attribute, e.g. id"
     ),
-    order_by: t.Optional[str] = Query(default="id", description="order by attribute, e.g. id"),
+    order_by: t.Optional[str] = Query(
+        default="id", description="order by attribute, e.g. id"
+    ),
 ):
     return await services.filter(
         filter_string=filter_string,
@@ -40,7 +42,7 @@ async def get_all_orders(
 @router.put(
     "/",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(require_dispatcher)],
+    # dependencies=[Depends(require_dispatcher)],
 )
 async def update_order_status(data_in: schemas.IOrderUpdate):
     return await services.update_order_status(data_in=data_in)

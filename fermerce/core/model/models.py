@@ -1,4 +1,3 @@
-# import all apps model to this file for alembic migration access
 from fermerce.app.users.user.models import User
 
 from fermerce.app.users.staff.models import Staff
@@ -14,7 +13,7 @@ from fermerce.app.markets.delivery_mode.models import DeliveryMode
 
 from fermerce.app.markets.order.models import Order, OrderItem
 
-# from fermerce.app.markets.payment.model import Payment
+from fermerce.app.markets.payment.models import Payment
 from fermerce.app.business.vendor.models import Vendor
 from fermerce.app.medias.models import Media
 from fermerce.app.users.address.models import ShippingAddress

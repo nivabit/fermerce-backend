@@ -15,7 +15,6 @@ class IOrderOrderOut(pyd.BaseModel):
     order_id: str
     user: user_schema.IUserOut
     shipping_address: address_schema.IAddressOut
-    payment: t.Optional[payment_schema.IPaymentOrderOut]
     items: t.List["IOrderItemsOut"] = []
     created_at: datetime.datetime
 

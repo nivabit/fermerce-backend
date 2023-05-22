@@ -1,101 +1,111 @@
-import datetime
 import typing as t
-import uuid
 import pydantic as pyd
-
-from fermerce.app.users.user import schemas as user_schema
-
-from fermerce.app.markets.payment import enum
-from fermerce.core.enum.frequent_duration import Frequent
+import uuid
 
 
-class IPaymentOrderOut(pyd.BaseModel):
-    id: uuid.UUID
-    reference: str
-    completed: bool
-    total_payed: float
+class IPaymentCardIn(pyd.BaseModel):
+    order_id: uuid.UUID
+    cardno: pyd.PaymentCardNumber
+    cvv: str = pyd.Field(
+        ..., title="card cvv", description="Customer cvv", max_length=3, min_length=3
+    )
+    expirymonth: str = pyd.Field(
+        ..., title="card expire month", description="Customer card expire month"
+    )
+    expiryyear: str = pyd.Field(
+        ..., title="card expire year", description="Customer card expire year"
+    )
+    phonenumber: t.Optional[str]
+    pin: str = pyd.Field(
+        ...,
+        title="card pin",
+        description="Customer card pin",
+        min_length=4,
+        max_length=4,
+    )
+    suggested_auth: str = pyd.Field(
+        title="card authentication mode",
+        description="what mode is Customer card supported e.g PIN, Address but for now we support pin only",
+        default="pin",
+    )
 
 
-class IPaymentRevenueInDateRange(pyd.BaseModel):
-    start_date: datetime.date
-    end_date: datetime.date
-    freq: Frequent = Frequent.daily
+class IPaymentVerificationResponse(pyd.BaseModel):
+    flwRef: t.Optional[str]
+    cardToken: t.Optional[str]
+    chargedAmount: t.Optional[int]
+    amount: t.Optional[int]
+    transactionComplete: t.Optional[bool] = False
+    error: t.Optional[bool] = False
+    txRef: t.Optional[str]
 
 
-class IPaymentTrend(pyd.BaseModel):
-    daily: float
-    weekly: float
-    monthly: float
-    yearly: float
+class ICardChargeOut(pyd.BaseModel):
+    order_id: uuid.UUID
+    message: str
 
 
-class IVerifyPaymentResponse(pyd.BaseModel):
-    reference: str
+class ICardChargeResponse(pyd.BaseModel):
+    validationRequired: t.Optional[bool] = False
+    suggestedAuth: t.Optional[str] = "PIN"
+    flwRef: str
+    authUrl: t.Optional[str]
+    error: t.Optional[bool] = False
+    txRef: str
 
 
-class IPaymentIn(pyd.BaseModel):
-    order_id: str
+class IValidationOut(pyd.BaseModel):
+    messages: str
+    order_id: uuid.UUID
 
 
-class ICustomer(pyd.BaseModel):
-    order_id: str
-    user_id: int
-    email: pyd.EmailStr
-    name: str
-
-
-class IPaymentInitOut(pyd.BaseModel):
-    paymentLink: str
-    total_amount: pyd.condecimal(max_digits=10, decimal_places=2)
-
-
-class PaymentMeta(pyd.BaseModel):
-    user_id: int
-    order_id: str
-
-
-class IOrderInfo(pyd.BaseModel):
-    id: uuid.UUID
-    order_id: str
-    user: user_schema.IUserOut
-    created_at: datetime.datetime
-
-    class Config:
-        orm_mode = True
-
-
-class IPayment(pyd.BaseModel):
-    id: uuid.UUID
-    reference: str
-    completed: bool
-    order_id: str
-    total_payed: float
-
-
-class IPaymentVerifyOut(pyd.BaseModel):
+class IPaymentValidationResponse(pyd.BaseModel):
     error: bool
     txRef: str
-    amount: int
-    transactionComplete: bool
+    flwRef: str
+    errMsg: str = None
 
 
-class IDataIn(pyd.BaseModel):
-    link: str
+class IPaymentUserIn(pyd.BaseModel):
+    email: str
+    phonenumber: str
+    firstname: str
+    lastname: str
+    IP: t.Optional[pyd.IPvAnyAddress]
+    txRef: str
+    amount: float
 
 
-class IPaymentResponse(pyd.BaseModel):
+class IValidatedPaymentIn(pyd.BaseModel):
+    otp: str
+    order_id: uuid.UUID
+
+
+class TransactionData(pyd.BaseModel):
+    settlement_id: str = pyd.Field(alias="settlementId")
+    id: int
+    AccountId: int
+    TransactionId: int
+    FlwRef: str
+    walletId: int
+    AmountRefunded: str
     status: str
-    message: str
-    data: t.Optional[IDataIn]
+    destination: str
+    meta: str
+    updatedAt: str
+    createdAt: str
 
 
-class IPaymentLinkData(pyd.BaseModel):
-    public_key: str
-    amount: int
-    tx_ref: str
-    currency: enum.PaymentCurrency = enum.PaymentCurrency.NGN
-    redirect_url: str = (
-        "https://webhook.site/9d0b00ba-9a69-44fa-a43d-a82c33c36fdc"
-    )
-    user: ICustomer
-    meta: PaymentMeta
+class IRefundDataIn(pyd.BaseModel):
+    order_id: uuid.UUID
+    amount: float
+
+
+class IRefundResponse(pyd.BaseModel):
+    status: bool
+    data: TransactionData
+
+
+def convert_to_pydantic(data: t.Tuple[bool, dict]) -> IRefundResponse:
+    status, inner_data = data
+    return IRefundResponse(status=status, data=TransactionData(**inner_data))

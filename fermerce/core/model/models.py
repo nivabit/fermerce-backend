@@ -13,7 +13,11 @@ from fermerce.app.markets.delivery_mode.models import DeliveryMode
 
 from fermerce.app.markets.order.models import Order, OrderItem
 
-from fermerce.app.markets.payment.models import Payment
+from fermerce.app.markets.payment.models import (
+    Payment,
+    PaymentRecipient,
+    TransferPayment,
+)
 from fermerce.app.business.vendor.models import Vendor
 from fermerce.app.medias.models import Media
 from fermerce.app.users.address.models import ShippingAddress

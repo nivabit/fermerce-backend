@@ -1,5 +1,6 @@
 import uuid
 from tortoise import fields, models
+from fermerce.app.markets.payment.models import Payment
 from fermerce.app.markets.tracking.models import Tracking
 from fermerce.lib.utils.random_string import (
     generate_order_Tracking_id,
@@ -19,7 +20,7 @@ class Order(models.Model):
     shipping_address = fields.ForeignKeyField(
         "models.ShippingAddress", related_name="orders"
     )
-    # payment = fields.ForeignKeyField("models.Payment", related_name="order")
+    payment = fields.BackwardOneToOneRelation[Payment]
     delivery_mode = fields.ForeignKeyField("models.DeliveryMode")
     is_complete = fields.BooleanField(default=False)
     items: fields.ForeignKeyRelation["OrderItem"]

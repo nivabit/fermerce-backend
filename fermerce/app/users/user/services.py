@@ -54,9 +54,10 @@ async def update_user_details(data_in=schemas.IUserUpdateIn):
         )
         if str(check_existing_email.id) != check_user.id:
             raise error.BadDataError("Account with this details already exists")
-    users_update = await check_user.update_from_dict(
+    users_update = check_user.update_from_dict(
         data_in.dict(exclude={"id"}, exclude_unset=True),
     )
+    await users_update.save()
 
     if not users_update:
         raise error.ServerError("Could not updating  details, please try again")
@@ -193,26 +194,20 @@ async def update_user_password(
 ) -> IResponseMessage:
     token_data: dict = security.JWTAUTH.data_decoder(encoded_data=data_in.token)
     if token_data and token_data.get("user_id", None):
-        users_obj = await models.User.get_or_none(
-            id=token_data.get("user_id", None)
-        )
+        users_obj = await models.User.get_or_none(id=token_data.get("user_id", None))
         if not users_obj:
             raise error.NotFoundError("User not found")
         if users_obj.reset_token != data_in.token:
             raise error.UnauthorizedError()
         if users_obj.check_password(data_in.password.get_secret_value()):
-            raise error.BadDataError(
-                "Try another password you have not used before"
-            )
+            raise error.BadDataError("Try another password you have not used before")
         token = security.JWTAUTH.data_encoder(
             data={"user_id": str(users_obj.id)}, duration=timedelta(days=1)
         )
         if token:
             await models.User.filter(id=users_obj.id).update(
                 reset_token=token,
-                password=models.User.generate_hash(
-                    data_in.password.get_secret_value()
-                ),
+                password=models.User.generate_hash(data_in.password.get_secret_value()),
             )
             await tasks.send_verify_users_password_reset.kiq(
                 dict(
@@ -237,9 +232,7 @@ async def update_users_password_no_token(
         raise error.BadDataError("Old password is incorrect")
 
     if user_obj.check_password(data_in.password.get_secret_value()):
-        raise error.BadDataError(
-            "Try another password you have not used before"
-        )
+        raise error.BadDataError("Try another password you have not used before")
     if await user_obj.update_from_dict(
         password=models.User.generate_hash(data_in.password.get_secret_value())
     ):
@@ -260,13 +253,9 @@ async def remove_users_data(data_in: schemas.IUserRemove) -> None:
         if data_in.permanent:
             await models.User.filter(id=user_to_remove.id).delete()
         else:
-            await models.User.filter(id=user_to_remove.id).update(
-                is_archived=True
-            )
+            await models.User.filter(id=user_to_remove.id).update(is_archived=True)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    raise error.NotFoundError(
-        f"User with  user id {data_in.user_id} does not exist"
-    )
+    raise error.NotFoundError(f"User with  user id {data_in.user_id} does not exist")
 
 
 async def get_total_users():
@@ -274,9 +263,7 @@ async def get_total_users():
     return ITotalCount(count=total_count).dict()
 
 
-async def get_user(
-    user_id: uuid.UUID, load_related: bool = False
-) -> models.User:
+async def get_user(user_id: uuid.UUID, load_related: bool = False) -> models.User:
     query = models.User.filter(id=user_id)
     try:
         result = await filter_and_single(

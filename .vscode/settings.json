@@ -16,5 +16,7 @@
   "python.testing.pytestEnabled": true,
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
-  }
+  },
+  "editor.fontFamily": "consolas, 'Courier New',monospace",
+  "editor.fontSize": 16
 }

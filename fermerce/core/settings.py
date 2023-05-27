@@ -54,6 +54,7 @@ class Settings(pyd.BaseSettings):
     access_token_expire_time: int = os.getenv("ACCESS_TOKEN_EXPIRE_TIME")
     refresh_token_expire_time: int = os.getenv("REFRESH_TOKEN_EXPIRE_TIME")
     # payment service settings
+    base_payment_url: str = os.getenv("BASE_PAYMENT_URL")
     payment_secret_key: str = os.getenv("PAYMENT_SECRET_KEY")
     payment_public_key: str = os.getenv("PAYMENT_PUBLIC_KEY")
     # project template, static files path settings

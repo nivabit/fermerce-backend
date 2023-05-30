@@ -17,7 +17,8 @@ from fermerce.app.markets.delivery_mode.api.v1 import (
 )
 from fermerce.app.markets.order.api.admin_v1 import router as order_api_router
 
-from fermerce.app.markets.payment.api.admin_v1 import router as payment_api_router
+from fermerce.app.payment.api.admin_v1 import router as payment_api_router
+
 
 router = APIRouter(prefix=f"{get_api_prefix.get_prefix()}")
 router.include_router(router=permission_api_router)

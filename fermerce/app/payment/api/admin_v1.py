@@ -1,7 +1,7 @@
 import typing as t
 from fastapi import APIRouter, Depends, Query, status
-from fermerce.app.markets.payment.services import charges
-from fermerce.app.markets.payment.services import refunds
+from fermerce.app.payment.services import charges
+from fermerce.app.payment.services import refunds
 from fermerce.app.users.user.models import User
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage
@@ -9,14 +9,16 @@ from fermerce.lib.utils.paystack.refund import schemas as charge_schemas
 from fermerce.app.users.user import dependency
 
 router = APIRouter(prefix="/payments", tags=["payments"])
-
-
-@router.post("/refund", status_code=status.HTTP_200_OK, response_model=IResponseMessage)
-async def create_payment(
-    data_in: charge_schemas.RefundTransactionIn,
-    user: User = Depends(dependency.require_user),
-):
-    return await refunds.refund_charges(data_in=data_in, user=user)
+refund = APIRouter(tags=["payments"])
+recipient = APIRouter(tags=["payments"])
+router.include_router(
+    router=refund,
+    prefix="/recipient",
+)
+router.include_router(
+    router=recipient,
+    prefix="/refund",
+)
 
 
 @router.get("/admin", status_code=status.HTTP_200_OK, response_model=dict)
@@ -49,6 +51,23 @@ async def get_payment_list_by_admin(
         order_by=order_by,
         load_related=load_related,
     )
+
+
+@refund.post("/", status_code=status.HTTP_200_OK, response_model=IResponseMessage)
+async def create_refund(
+    data_in: charge_schemas.RefundTransactionIn,
+    user: User = Depends(dependency.require_user),
+):
+    return await refunds.refund_charges(data_in=data_in, user=user)
+
+
+@refund.get(
+    "/{payment_reference}",
+    status_code=status.HTTP_200_OK,
+    response_model=IResponseMessage,
+)
+async def get_refund(payment_reference: str):
+    return await refunds.get_refund(payment_reference)
 
 
 # @router.get(

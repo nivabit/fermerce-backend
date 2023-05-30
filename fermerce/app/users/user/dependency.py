@@ -8,15 +8,11 @@ __users_write = AppWrite(model=User)
 
 
 async def require_user(get_user: dict = Depends(AppAuth.authenticate)):
-    return await __users_write.get_user_data(
-        user_id=get_user.get("user_id", None)
-    )
+    return await __users_write.get_user_data(user_id=get_user.get("user_id", None))
 
 
 async def require_vendor(get_user: dict = Depends(AppAuth.authenticate)):
-    user = await __users_write.get_user_data(
-        user_id=get_user.get("user_id", None)
-    )
+    user = await __users_write.get_user_data(user_id=get_user.get("user_id", None))
     try:
         if not user.vendor:
             raise error.UnauthorizedError()
@@ -26,9 +22,7 @@ async def require_vendor(get_user: dict = Depends(AppAuth.authenticate)):
 
 
 async def require_staff(get_user: dict = Depends(AppAuth.authenticate)):
-    user = await __users_write.get_user_data(
-        user_id=get_user.get("user_id", None)
-    )
+    user = await __users_write.get_user_data(user_id=get_user.get("user_id", None))
     try:
         if not user.staff:
             raise error.UnauthorizedError()

@@ -8,6 +8,10 @@ class IChargeRequest(pyd.BaseModel):
     reference: str
 
 
+class IChargeRequestForLink(IChargeRequest):
+    callback_url: str
+
+
 class IChargeRequestData(pyd.BaseModel):
     authorization_url: str
     access_code: str
@@ -64,7 +68,7 @@ class Data(pyd.BaseModel):
     ip_address: str
     fees: int
     log: ILog
-    authorization: IAuthorization
+    authorization: t.Optional[IAuthorization]
 
 
 class IChargeResponse(pyd.BaseModel):

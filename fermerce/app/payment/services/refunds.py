@@ -2,7 +2,7 @@ from fermerce.app.markets.status.models import Status
 from fermerce.app.users.user.models import User
 from fermerce.core.schemas.response import IResponseMessage
 from fermerce.lib.errors import error
-from fermerce.app.markets.payment import models
+from fermerce.app.payment import models
 from fermerce.lib.utils.paystack.refund import services, schemas as refund_schemas
 
 
@@ -26,11 +26,8 @@ async def refund_charges(
     raise error.ServerError("error refunding payment")
 
 
-async def get_refund(payment_reference: str, user: User) -> refund_schemas.IRefundData:
-    get_payment = await models.Payment.get_or_none(
-        reference=payment_reference,
-        user=user,
-    )
+async def get_refund(payment_reference: str) -> refund_schemas.IRefundData:
+    get_payment = await models.Payment.get_or_none(reference=payment_reference)
     if get_payment:
         response = await services.get_refund(payment_reference)
         if response.status:

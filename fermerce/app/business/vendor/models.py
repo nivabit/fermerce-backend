@@ -12,9 +12,7 @@ class Vendor(models.Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
     business_name = fields.CharField(max_length=30, null=False)
     logo = fields.ForeignKeyField("models.Media", null=True)
-    states: fields.ManyToManyRelation[State] = fields.ManyToManyField(
-        "models.State"
-    )
+    states: fields.ManyToManyRelation[State] = fields.ManyToManyField("models.State")
     user: fields.ForeignKeyRelation[User] = fields.OneToOneField(
         "models.User", related_name="vendor"
     )
@@ -33,6 +31,3 @@ class Vendor(models.Model):
 
     class Meta:
         ordering = ("-id", "-created_at", "-modified_at")
-
-
-UserOut = pydantic_model_creator(Vendor, name="vendor")

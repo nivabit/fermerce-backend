@@ -10,8 +10,8 @@ from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage
 from fermerce.core.services.base import filter_and_list, filter_and_single
 from fermerce.lib.errors import error
-from fermerce.app.markets.payment import schemas, models
-from fermerce.app.markets.payment import utils
+from fermerce.app.payment import schemas, models
+from fermerce.app.payment import utils
 from fermerce.lib.utils.paystack.charge import services, schemas as charge_schemas
 
 
@@ -20,7 +20,7 @@ async def create_order_charge(
     user: User,
 ) -> charge_schemas.IChargeRequest:
     get_order = await Order.get_or_none(id=data_in.order_id, user=user).select_related(
-        "shipping_address", "payment"
+        "shipping_address", "payment", "payment__status"
     )
     if not get_order:
         raise error.NotFoundError("order not found")
@@ -31,9 +31,8 @@ async def create_order_charge(
     )
     if not order_items:
         raise error.NotFoundError("No item for this order")
-    if get_order.payment:
+    if str(get_order.payment.status.name).lower() == "complete":
         raise error.BadDataError("This order has already been paid for")
-
     total_price = utils.get_product_total_price(order_items)
     if total_price > 0:
         get_status, _ = await Status.get_or_create(name="processing")
@@ -46,7 +45,7 @@ async def create_order_charge(
         if new_payment:
             data_out = charge_schemas.IChargeRequest(
                 email=user.email,
-                amount=new_payment.total,
+                amount=int(new_payment.total) * 100,
                 reference=new_payment.reference,
             )
             return data_out
@@ -58,7 +57,7 @@ async def create_charges_url(
     user: User,
 ) -> charge_schemas.IChargeRequestData:
     get_order = await Order.get_or_none(id=data_in.order_id, user=user).select_related(
-        "shipping_address", "payment"
+        "shipping_address", "payment", "payment__status"
     )
     if not get_order:
         raise error.NotFoundError("order not found")
@@ -69,28 +68,41 @@ async def create_charges_url(
     )
     if not order_items:
         raise error.NotFoundError("No item for this order")
-    if get_order.payment:
-        raise error.BadDataError("This order has already been paid for")
-
+    if get_order.is_complete:
+        raise error.BadDataError("Invalid data provided")
+    if str(get_order.payment.status.name).lower() == "complete":
+        raise error.BadDataError("this order is already complete")
     total_price = utils.get_product_total_price(order_items)
-    if total_price > 0:
+    if get_order.payment:
+        get_order.payment.update_from_dict(
+            {
+                "total": total_price,
+                "reference": get_order.payment.generate_order_reference(),
+            }
+        )
+        await get_order.payment.save()
+        await get_order.refresh_from_db()
+    else:
         get_status, _ = await Status.get_or_create(name="processing")
-        new_payment = await models.Payment.create(
+        await models.Payment.create(
             order=get_order,
             total=total_price,
             user=user,
             status=get_status,
         )
-        if new_payment:
-            data = charge_schemas.IChargeRequest(
-                email=user.email,
-                amount=new_payment.total,
-                reference=new_payment.reference,
-            )
-            generate_url = await services.create_charge(data_in=data)
-            if generate_url.status:
-                return generate_url.data
-            raise error.BadDataError(generate_url.message)
+        await get_order.payment.refresh_from_db()
+
+    if total_price > 0:
+        data = charge_schemas.IChargeRequestForLink(
+            email=user.email,
+            amount=int(total_price) * 100,
+            reference=get_order.payment.reference,
+            callback_url="http://127.0.0.1:8000",
+        )
+        generate_url = await services.create_charge(data_in=data)
+        if generate_url.status:
+            return generate_url.data
+        raise error.BadDataError(generate_url.message)
     raise error.ServerError("Error creating payment link")
 
 
@@ -106,8 +118,12 @@ async def verify_charges(
         response = await services.charge_verification(get_unfinished_payment.reference)
         if response.status:
             get_status, _ = await Status.get_or_create(name="completed")
-            get_unfinished_payment.update_from_dict({"status": get_status})
+            get_unfinished_payment.update_from_dict(
+                {"status": get_status, "is_verified": response.status}
+            )
             await get_unfinished_payment.save()
+            if response.data.authorization:
+                await models.SaveCard.create(**response.data.authorization, user=user)
             return IResponseMessage(message="payment verification was successful")
         raise error.BadDataError(response.message)
     raise error.ServerError("error validating payment")
@@ -162,14 +178,6 @@ async def list_charges(
         sort_by=sort_by,
         load_related=load_related,
     )
-
-
-# async def delete_payment(payment_id: str) -> None:
-#     get_payment = await payment_repo.get(id=payment_id)
-#     if not get_payment:
-#         raise error.NotFoundError("payment not found")
-#     await payment_repo.delete(id=payment_id)
-#     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # async def get_payment_revenue_trend() -> schemas.IPaymentTrend:

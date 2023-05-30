@@ -9,7 +9,7 @@ async def create_refund(data_in: schemas.RefundTransactionIn):
         response = await client.request.post(
             url=endpoint.get("refund").get("create"), json=data_in.dict()
         )
-        data: schemas.IRefundSingleResponse = await response.json()
+        data: schemas.IRefundSingleResponse = response.json()
         return data
     except Exception:
         raise error.BadDataError(detail="Error refunding transaction")
@@ -20,7 +20,7 @@ async def get_refund(reference_code: str):
         response = await client.request.post(
             url=f'{endpoint.get("refund").get("create")}/{reference_code}'
         )
-        data: schemas.IRefundSingleResponse = await response.json()
+        data: schemas.IRefundSingleResponse = response.json()
         return data
     except Exception:
         raise error.ServerError("Error listing refunds")

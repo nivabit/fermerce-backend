@@ -10,7 +10,7 @@ async def create_trans_recipient(data_in: schemas.ITransactionRecipientIn):
         response = await client.request.post(
             url=endpoint.get("transfers_recipient").get("create"), json=data_in.dict()
         )
-        data: schemas.TransferRecipientResponse = await response.json()
+        data: schemas.TransferRecipientResponse = response.json()
         return data
     except Exception:
         raise error.ServerError("Error creating payment recipient")
@@ -24,7 +24,7 @@ async def update_trans_recipient(
             url=f'{endpoint.get("transfers_recipient").get("create")}/{recipient_code}',
             json=data_in.dict(),
         )
-        data: schemas.TransferRecipientResponse = await response.json()
+        data: schemas.TransferRecipientResponse = response.json()
         return data
     except Exception:
         raise error.ServerError("Error updating payment recipient")
@@ -35,7 +35,7 @@ async def create_bulk_trans_recipient(data_in: t.List[schemas.ITransactionRecipi
         response = await client.request.post(
             url=endpoint.get("transfers_recipient").get("create"), json=data_in.dict()
         )
-        data: schemas.TransferRecipientBulkResponse = await response.json()
+        data: schemas.TransferRecipientBulkResponse = response.json()
         return data
     except Exception:
         raise error.ServerError("Error creating payment request")
@@ -46,7 +46,7 @@ async def list_trans_recipient():
         response = await client.request.post(
             url=endpoint.get("transfers_recipient").get("create")
         )
-        data: schemas.TransferRecipientListResponse = await response.json()
+        data: schemas.TransferRecipientListResponse = response.json()
         return data
     except Exception:
         raise error.ServerError("Error listing payment recipient")
@@ -57,7 +57,7 @@ async def get_trans_recipient(recipient_code: str):
         response = await client.request.post(
             url=f'{endpoint.get("transfers_recipient").get("create")}/{recipient_code}'
         )
-        data: schemas.TransferRecipientResponse = await response.json()
+        data: schemas.TransferRecipientResponse = response.json()
         return data
     except Exception:
         raise error.ServerError("Error getting payment recipient information")
@@ -68,7 +68,7 @@ async def delete_trans_recipient(recipient_code: str):
         response = await client.request.post(
             url=f'{endpoint.get("transfers_recipient").get("create")}/{recipient_code}'
         )
-        data: t.Dict[t.Dict] = await response.json()
+        data: t.Dict[t.Dict] = response.json()
         return data
     except Exception:
         raise error.ServerError("Error deleting payment recipient")

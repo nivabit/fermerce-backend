@@ -18,7 +18,6 @@ passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 taskiq = {extras = ["reload"], version = "^0.4.0"}
 pillow = "^9.5.0"
 deta = "^1.1.0"
-rave-python = "^1.2.16"
 
 [tool.poetry.group.test.dependencies]
 pytest-asyncio = "^0.20.3"

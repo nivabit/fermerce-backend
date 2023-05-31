@@ -14,3 +14,6 @@ class Cart(models.Model):
         ProductSellingUnit
     ] = fields.ForeignKeyField("models.ProductSellingUnit")
     created_at: fields.DatetimeField(auto_now=True)
+
+    class Meta:
+        table = "fm_cart"

@@ -1,12 +1,12 @@
 import typing as t
 import uuid
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile, status
-from fermerce.app.users.user.models import User
+from fermerce.app.business.vendor.models import Vendor
 from fermerce.core.schemas.response import ITotalCount
 from fermerce.app.products.product import schemas, services
 from fermerce.core.enum.sort_type import SearchType, SortOrder
 from fermerce.app.users.staff.dependency import require_super_admin_or_admin
-from fermerce.app.users.user import dependency
+from fermerce.app.business.vendor import dependency
 
 
 router = APIRouter(prefix="/products", tags=["Product"])
@@ -16,10 +16,10 @@ router = APIRouter(prefix="/products", tags=["Product"])
 async def create_product(
     request: Request,
     data_in: schemas.IProductIn,
-    user: User = Depends(dependency.require_vendor),
+    vendor: Vendor = Depends(dependency.require_vendor),
 ):
     return await services.create(
-        user,
+        vendor,
         data_in,
         request=request,
     )
@@ -70,10 +70,10 @@ async def update_product(
     product_id: uuid.UUID,
     request: Request,
     data_in: schemas.IProductIn,
-    user: User = Depends(dependency.require_vendor),
+    vendor: Vendor = Depends(dependency.require_vendor),
 ) -> schemas.IProductListOut:
     return await services.update(
-        user=user, product_id=product_id, data_in=data_in, request=request
+        vendor=vendor, product_id=product_id, data_in=data_in, request=request
     )
 
 
@@ -88,6 +88,6 @@ async def get_total_product() -> t.Optional[ITotalCount]:
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(
     product_id: uuid.UUID,
-    user: User = Depends(dependency.require_vendor),
+    vendor: Vendor = Depends(dependency.require_vendor),
 ) -> None:
-    return await services.delete(product_id=product_id, user=user)
+    return await services.delete(product_id=product_id, vendor=vendor)

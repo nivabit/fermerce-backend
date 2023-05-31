@@ -11,3 +11,6 @@ class ProductCategory(models.Model):
     name = fields.CharField(max_length=50, null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
+
+    class Meta:
+        table = "fm_product_category"

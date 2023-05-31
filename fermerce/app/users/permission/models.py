@@ -15,5 +15,8 @@ class Permission(models.Model):
     modified_at = fields.DatetimeField(auto_now=True)
     staffs: fields.ReverseRelation[Staff]
 
+    class Meta:
+        table = "fm_permission"
+
     def __str__(self):
         return self.name

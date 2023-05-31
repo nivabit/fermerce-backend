@@ -1,9 +1,10 @@
 from datetime import timedelta
 import typing as t
 import uuid
-from fastapi import status
+from fastapi import BackgroundTasks, Request, status
 from fastapi import Response
 from tortoise.expressions import Q
+from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from fermerce.core.enum.sort_type import SortOrder, SearchType
 from fermerce.core.schemas.response import ITotalCount, IResponseMessage
 from fermerce.core.services.base import filter_and_list, filter_and_single
@@ -11,6 +12,7 @@ from fermerce.taskiq.user import tasks
 from fermerce.lib.errors import error
 from fermerce.app.users.user import schemas, models
 from fermerce.lib.utils import security
+from fermerce.app.users.auth import services as auth_services, schemas as auth_schemas
 
 
 async def create(data_in=schemas.IUserIn):
@@ -79,6 +81,52 @@ async def update_user_details(data_in=schemas.IUserUpdateIn):
         return IResponseMessage(
             message="Account was updated successfully, please check your email to activate your account"
         )
+
+
+async def login(
+    request: Request,
+    data_in: OAuth2PasswordRequestForm,
+    task: BackgroundTasks,
+) -> t.Union[auth_schemas.IToken, IResponseMessage]:
+    check_user = await models.User.get_or_none(
+        Q(username__icontains=data_in.username) | Q(email=data_in.username)
+    )
+    if not check_user:
+        raise error.UnauthorizedError(detail="incorrect email, username or password")
+    if not check_user.check_password(data_in.password):
+        raise error.UnauthorizedError(detail="incorrect email or password")
+    if check_user.is_archived:
+        raise error.UnauthorizedError()
+    if check_user.is_suspended:
+        raise error.UnauthorizedError("Your account is suspended")
+    if not check_user.is_verified and check_user.is_active:
+        await tasks.send_users_activation_email.kiq(
+            dict(
+                email=data_in.username,
+                id=str(check_user.id),
+                full_name=f"{check_user.firstname} {check_user.lastname}"
+                if check_user.firstname and check_user.lastname
+                else check_user.username,
+            )
+        )
+        return IResponseMessage(
+            message="Your is not verified, Please check your for verification link before continuing"
+        )
+    token = await auth_services.login(request=request, task=task, user_id=check_user.id)
+    if not token:
+        raise error.ServerError("Count not authenticate user")
+    return token
+
+
+async def refresh_login_token(
+    data_in: auth_schemas.IRefreshToken, request: Request, task: BackgroundTasks
+) -> auth_schemas.IToken:
+    token = await auth_services.login_token_refresh(
+        request=request, task=task, data_in=data_in
+    )
+    if not token:
+        raise error.ServerError("Count not authenticate user")
+    return token
 
 
 # # get all permissions
@@ -285,7 +333,6 @@ async def check_user_email(
     check_user = await models.User.get_or_none(
         Q(email=data_in.username) | Q(username=data_in.username)
     )
-    print(check_user)
     if not check_user:
         raise error.NotFoundError()
     return IResponseMessage(message="Account exists")

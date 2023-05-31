@@ -1,6 +1,13 @@
+from enum import Enum
 import uuid
 from tortoise import fields, models
 from fermerce.lib.utils.random_string import generate_orderId
+
+
+class DocumentEnum(str, Enum):
+    identityNumber = "identityNumber"
+    passportNumber = "passportNumber"
+    businessRegistrationNumber = "businessRegistrationNumber"
 
 
 class Payment(models.Model):
@@ -12,9 +19,31 @@ class Payment(models.Model):
     order = fields.OneToOneField("models.Order", related_name="payment")
     refund_meta = fields.JSONField(null=True, blank=True)
 
+    class Meta:
+        table = "fm_payment"
+
     @staticmethod
     def generate_order_reference():
         return generate_orderId(15)
+
+
+class BankDetail(models.Model):
+    id = fields.UUIDField(pk=True, default=uuid.uuid4)
+    bank_code = fields.CharField(max_length=10)
+    country_code = fields.CharField(max_length=10)
+    account_number = fields.CharField(max_length=12)
+    account_name = fields.CharField(max_length=255)
+    account_type = fields.CharField(max_length=100)
+    document_type = fields.CharEnumField(
+        DocumentEnum,
+        "bank verification document type",
+        max_length=30,
+        default=DocumentEnum.identityNumber,
+    )
+    document_number = fields.CharField(max_length=40)
+
+    class Meta:
+        table = "fm_bank_detail"
 
 
 class SaveCard(models.Model):
@@ -32,20 +61,23 @@ class SaveCard(models.Model):
     reusable = fields.BooleanField(default=False)
     created = fields.DatetimeField(auto_now=True)
 
+    class Meta:
+        table = "fm_save_payment_card"
+
 
 class PaymentRecipient(models.Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
-    type = fields.CharField(max_length=255)
-    name = fields.CharField(max_length=255)
     currency = fields.CharField(max_length=5, default="NGN")
-    account_number = fields.CharField(max_length=255)
-    bank_code = fields.CharField(max_length=255)
     status = fields.ForeignKeyField("models.Status")
+    bank_details = fields.ForeignKeyField("models.BankDetail", related_name="payments")
     currency = fields.CharField(max_length=255)
     recipient_code = fields.CharField(max_length=255)
     is_deleted = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now=True)
     updatedAt = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        table = "fm_payment_recipient"
 
 
 class TransferPayment(models.Model):
@@ -63,3 +95,6 @@ class TransferPayment(models.Model):
     status = fields.ForeignKeyField("models.Status")
     createdAt = fields.DatetimeField(auto_now=True)
     updatedAt = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        table = "fm_transfer_payment"

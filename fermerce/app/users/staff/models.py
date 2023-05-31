@@ -15,7 +15,7 @@ class Staff(models.Model):
     permissions = fields.ManyToManyField(
         "models.Permission",
         related_name="staffs",
-        through="staff_permissions",
+        through="fm_staff_permission",
     )
     tel = fields.CharField(max_length=17, null=True)
     is_suspended = fields.BooleanField(default=False, null=True)
@@ -23,3 +23,6 @@ class Staff(models.Model):
     is_archived = fields.BooleanField(default=False, null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
+
+    class Meta:
+        table = "fm_staff"

@@ -2,11 +2,9 @@ import datetime
 import typing as t
 import uuid
 import pydantic as pyd
-from fermerce.app.payment import schemas as payment_schema
-from fermerce.app.users.address import schemas as address_schema
+from fermerce.app.business.address import schemas as address_schema
 from fermerce.app.users.user import schemas as user_schema
 from fermerce.app.markets.state import schemas as state_schema
-from fermerce.app.products.product import schemas as product_schema
 from fermerce.app.products.selling_units import schemas as selling_unit_schema
 
 

@@ -8,3 +8,6 @@ class Message(models.Model):
     sender = fields.ForeignKeyField("models.Staff", related_name="messages")
     message = fields.CharField(max_length=300)
     created_at = fields.DatetimeField(auto_now=True)
+
+    class Meta:
+        table = "fm_message"

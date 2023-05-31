@@ -2,19 +2,17 @@ import uuid
 import typing as t
 from fastapi import status, Response
 from tortoise.expressions import Q
+from fermerce.app.business.vendor.models import Vendor
 from fermerce.app.products.product.models import Product
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage
 from fermerce.core.services.base import filter_and_list
 from fermerce.lib.errors import error
 from fermerce.app.products.product_detail import models, schemas
-from fermerce.app.users.user.models import User
 
 
-async def create_details(data_in: schemas.IProductDetailsIn, user: User):
-    get_product = await Product.get_or_none(
-        id=data_in.product_id, vendor=user.vendor
-    )
+async def create_details(data_in: schemas.IProductDetailsIn, vendor: Vendor):
+    get_product = await Product.get_or_none(id=data_in.product_id, vendor=vendor)
     if not get_product:
         raise error.NotFoundError("product detail not found")
     to_create = [
@@ -23,9 +21,7 @@ async def create_details(data_in: schemas.IProductDetailsIn, user: User):
     ]
     created_details = await models.ProductDetail.bulk_create(to_create)
     if created_details:
-        return IResponseMessage(
-            message="Product details was created successfully"
-        )
+        return IResponseMessage(message="Product details was created successfully")
     raise error.ServerError("error creating product details")
 
 
@@ -51,8 +47,7 @@ async def filter(
         query = query.filter(product=product_id)
     if filter_string:
         query = query.filter(
-            Q(title__icontains=filter_string)
-            | Q(description__icontains=filter_string)
+            Q(title__icontains=filter_string) | Q(description__icontains=filter_string)
         )
 
     results = await filter_and_list(
@@ -69,11 +64,9 @@ async def filter(
 
 
 async def update_product_detail(
-    data_in: schemas.IProductDetailsUpdateIn, user: User
+    data_in: schemas.IProductDetailsUpdateIn, vendor: Vendor
 ) -> models.ProductDetail:
-    get_product = await Product.get_or_none(
-        id=data_in.product_id, vendor=user.vendor
-    )
+    get_product = await Product.get_or_none(id=data_in.product_id, vendor=vendor)
     if not get_product:
         raise error.NotFoundError("product not found")
 
@@ -90,11 +83,9 @@ async def update_product_detail(
 
 
 async def delete_product_detail(
-    data_in: schemas.IProductDetailsRemoveIn, user: User
+    data_in: schemas.IProductDetailsRemoveIn, vendor: Vendor
 ):
-    get_product = await Product.get_or_none(
-        id=data_in.product_id, vendor=user.vendor
-    )
+    get_product = await Product.get_or_none(id=data_in.product_id, vendor=vendor)
     if not get_product:
         raise error.NotFoundError("product not found")
 

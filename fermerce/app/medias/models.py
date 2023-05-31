@@ -12,6 +12,9 @@ class Media(models.Model):
     content_type = fields.CharField(max_length=30)
     alt = fields.CharField(max_length=50, unique=True)
 
+    class Meta:
+        table = "fm_media"
+
     @classmethod
     def allowed_image_extensions(cls) -> t.List[str]:
         return ["jpg", "png", "jpeg", "gif", "webp"]

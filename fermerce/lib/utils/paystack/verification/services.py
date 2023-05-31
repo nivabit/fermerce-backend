@@ -27,7 +27,7 @@ async def validate_account(data_in: schemas.IBankAccountValidateIn):
                 "bank_code": data_in.bank_code,
             },
         )
-        data: schemas.IAccountVerificationResponse = response.json()
+        data = schemas.IAccountVerificationResponse(response.json())
         return data
     except Exception:
         raise error.BadDataError(detail="Error refunding transaction")

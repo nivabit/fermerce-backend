@@ -6,7 +6,7 @@ from fermerce.app.markets.cart.models import Cart
 from fermerce.app.products.promo_code.models import ProductPromoCode
 from fermerce.app.markets.delivery_mode.models import DeliveryMode
 from fermerce.app.markets.status.models import Status
-from fermerce.app.users.address.models import ShippingAddress
+from fermerce.app.business.address.models import Address
 from fermerce.app.users.user.models import User
 from fermerce.app.markets.order import models, schemas
 from fermerce.core.enum.sort_type import SortOrder
@@ -19,9 +19,7 @@ async def create(
     data_in: schemas.IOrderIn,
     user: User,
 ) -> schemas.IOrderSuccessOut:
-    get_shipping_address = await ShippingAddress.get_or_none(
-        id=data_in.address_id
-    )
+    get_shipping_address = await Address.get_or_none(id=data_in.address_id)
     if not get_shipping_address:
         raise error.NotFoundError("Shipping shipping_address does not exist")
     get_delivery_mode = await DeliveryMode.get_or_none(id=data_in.delivery_mode)
@@ -105,23 +103,15 @@ async def add_promo_code(
     if get_item.product.vendor.id == promo_code.vendor.id:
         if promo_code.single:
             if await get_item.promo_codes.filter(id=promo_code.id).exists():
-                return IResponseMessage(
-                    message="promo code  has already bean applied"
-                )
+                return IResponseMessage(message="promo code  has already bean applied")
             await get_item.promo_codes.add(promo_code)
             return IResponseMessage(message="Order status updated successfully")
         else:
-            if await promo_code.products.filter(
-                id=get_item.product.id
-            ).exists():
+            if await promo_code.products.filter(id=get_item.product.id).exists():
                 if await get_item.promo_codes.filter(id=promo_code.id).exists():
-                    return IResponseMessage(
-                        message="Order status updated successfully"
-                    )
+                    return IResponseMessage(message="Order status updated successfully")
                 await get_item.promo_codes.add(promo_code)
-                return IResponseMessage(
-                    message="Order status updated successfully"
-                )
+                return IResponseMessage(message="Order status updated successfully")
         raise error.BadDataError("Invalid promo code")
     raise error.BadDataError("Invalid promo code")
 

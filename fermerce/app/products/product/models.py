@@ -32,11 +32,10 @@ class Product(models.Model):
     galleries = fields.ManyToManyField(
         "models.Media",
         related_name="product_galleries",
+        through="fm_product_media_gallery",
     )
-    categories: fields.ManyToManyRelation[
-        ProductCategory
-    ] = fields.ManyToManyField(
-        "models.ProductCategory", related_name="products"
+    categories: fields.ManyToManyRelation[ProductCategory] = fields.ManyToManyField(
+        "models.ProductCategory", related_name="products", through="fm_product_category"
     )
     measurement_units: fields.ForeignKeyRelation[ProductSellingUnit]
     promo_codes: fields.ManyToManyRelation[ProductPromoCode]
@@ -46,6 +45,9 @@ class Product(models.Model):
     )
     created_at = fields.DatetimeField(auto_now=True)
     modified_at = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        table = "fm_product"
 
     @staticmethod
     def make_slug(name: str, random_length: int = 10) -> str:

@@ -1,8 +1,8 @@
 import uuid
 import typing as t
 from fastapi import status
+from fermerce.app.business.vendor.models import Vendor
 from fermerce.app.products.product.models import Product
-from fermerce.app.users.user.models import User
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage, ITotalCount
 from fermerce.core.services.base import filter_and_list
@@ -12,25 +12,21 @@ from fastapi import Response
 
 
 async def create(
-    data_in: schemas.IProductPromoCodeIn, user: User
+    data_in: schemas.IProductPromoCodeIn, vendor: Vendor
 ) -> models.ProductPromoCode:
     check_code = await models.ProductPromoCode.get_or_none(
-        code=data_in.code, vendor=user.vendor
+        code=data_in.code, vendor=vendor
     )
     if check_code:
         raise error.DuplicateError("product promo code already exists")
-    new_code = await models.ProductPromoCode.create(
-        **data_in.dict(), vendor=user.vendor
-    )
+    new_code = await models.ProductPromoCode.create(**data_in.dict(), vendor=vendor)
     if new_code:
         return new_code
     raise error.ServerError("Internal server error")
 
 
-async def get(promo_code_id: uuid.UUID, user: User) -> models.ProductPromoCode:
-    code = await models.ProductPromoCode.get_or_none(
-        id=promo_code_id, vendor=user.vendor
-    )
+async def get(promo_code_id: uuid.UUID, vendor: Vendor) -> models.ProductPromoCode:
+    code = await models.ProductPromoCode.get_or_none(id=promo_code_id, vendor=vendor)
     if not code:
         raise error.NotFoundError("Product promo code not found")
     return code
@@ -60,23 +56,21 @@ async def filter(
     return results
 
 
-async def get_total_count(user: User) -> ITotalCount:
-    total = (
-        await models.ProductPromoCode.filter(vendor=user.vendor).all().count()
-    )
+async def get_total_count(vendor: Vendor) -> ITotalCount:
+    total = await models.ProductPromoCode.filter(vendor=vendor).all().count()
     return ITotalCount(count=total).dict()
 
 
 async def update(
-    promo_code_id: uuid.UUID, data_in: schemas.IProductPromoCodeIn, user: User
+    promo_code_id: uuid.UUID, data_in: schemas.IProductPromoCodeIn, vendor: Vendor
 ) -> models.ProductPromoCode:
     get_promo_code = await models.ProductPromoCode.get_or_none(
-        id=promo_code_id, vendor=user.vendor
+        id=promo_code_id, vendor=vendor
     )
     if not get_promo_code:
         raise error.NotFoundError("promo code does not exist")
     check_code = await models.ProductPromoCode.get_or_none(
-        code=data_in.code, vendor=user.vendor
+        code=data_in.code, vendor=vendor
     )
     if check_code and check_code.id != get_promo_code.id:
         raise error.DuplicateError("promo code already exists")
@@ -87,16 +81,14 @@ async def update(
 
 
 async def add_product_to_promo_code(
-    data_in: schemas.IProductPromoCodeUpdateIn, user: User
+    data_in: schemas.IProductPromoCodeUpdateIn, vendor: Vendor
 ) -> IResponseMessage:
     get_promo_code = await models.ProductPromoCode.get_or_none(
-        id=data_in.promo_code_id, vendor=user.vendor
+        id=data_in.promo_code_id, vendor=vendor
     )
     if not get_promo_code:
         raise error.NotFoundError("promo code does not exist")
-    check_products = await Product.filter(
-        id__in=data_in.products, vendor=user.vendor
-    ).all()
+    check_products = await Product.filter(id__in=data_in.products, vendor=vendor).all()
     if not check_products:
         raise error.NotFoundError("No product is found")
     existing_promo_products = await get_promo_code.products.all()
@@ -107,9 +99,9 @@ async def add_product_to_promo_code(
     return IResponseMessage(message="Product/products was added successfully")
 
 
-async def delete(promo_code_id: uuid.UUID, user: User) -> None:
+async def delete(promo_code_id: uuid.UUID, vendor: Vendor) -> None:
     check_code = await models.ProductPromoCode.get_or_none(
-        id=promo_code_id, vendor=user.vendor
+        id=promo_code_id, vendor=vendor
     )
     if not check_code:
         raise error.NotFoundError("Product promo code does not exist")
@@ -118,15 +110,13 @@ async def delete(promo_code_id: uuid.UUID, user: User) -> None:
 
 
 async def delete_product_from_promo_code(
-    data_in: schemas.IProductPromoCodeRemoveIn, user: User
+    data_in: schemas.IProductPromoCodeRemoveIn, vendor: Vendor
 ) -> IResponseMessage:
     check_code = await models.ProductPromoCode.get_or_none(
-        id=data_in.promo_code_id, vendor=user.vendor
+        id=data_in.promo_code_id, vendor=vendor
     )
     if not check_code:
         raise error.NotFoundError("Product promo code does not exist")
-    get_products = await Product.filter(
-        id__in=data_in.products, vendor=user.vendor
-    ).all()
+    get_products = await Product.filter(id__in=data_in.products, vendor=vendor).all()
     await check_code.products.remove(*get_products)
     return IResponseMessage(message="products was successfully removed")

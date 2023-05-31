@@ -1,7 +1,6 @@
 import typing as t
 import uuid
 import pydantic as pyd
-from fermerce.app.markets.state.schemas import IStateIn
 from fermerce.core.schemas.response import IResponseFilterOut
 
 

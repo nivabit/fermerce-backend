@@ -17,10 +17,18 @@ from fermerce.app.payment.models import (
     Payment,
     PaymentRecipient,
     TransferPayment,
+    SaveCard,
+    BankDetail,
 )
-from fermerce.app.business.vendor.models import Vendor
+from fermerce.app.business.vendor.models import (
+    Vendor,
+    VendorVerification,
+    VendorSetting,
+)
+
 from fermerce.app.medias.models import Media
-from fermerce.app.users.address.models import ShippingAddress
+from fermerce.app.business.address.models import Address
+
 from fermerce.app.products.measuring_unit.models import MeasuringUnit
 from fermerce.app.products.promo_code.models import ProductPromoCode
 from fermerce.app.products.category.models import ProductCategory

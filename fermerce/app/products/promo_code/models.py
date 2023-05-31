@@ -16,12 +16,14 @@ class ProductPromoCode(models.Model):
     )
     active_to = fields.DateField(
         null=True,
-        default=lambda: datetime.datetime.utcnow().date()
-        + datetime.timedelta(7),
+        default=lambda: datetime.datetime.utcnow().date() + datetime.timedelta(7),
     )
     products = fields.ManyToManyField(
-        "models.Product", related_name="promo_codes"
+        "models.Product", related_name="promo_codes", through="fm_product_promo_codes"
     )
     vendor: fields.ForeignKeyRelation[Vendor] = fields.ForeignKeyField(
         "models.Vendor", related_name="promo_codes"
     )
+
+    class Meta:
+        table = "fm_product_promo_code"

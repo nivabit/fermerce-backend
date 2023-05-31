@@ -9,3 +9,6 @@ class ProductDetail(models.Model):
     title = fields.CharField(max_length=50, null=False)
     description = fields.TextField(null=False)
     product = fields.ForeignKeyField("models.Product", related_name="details")
+
+    class Meta:
+        table = "fm_product_detail"

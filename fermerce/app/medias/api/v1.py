@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Form, Header, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from fermerce.app.medias import schemas, services
 from fermerce.core.settings import config
-from fermerce.app.users.user.dependency import require_user
+from fermerce.app.user.dependency import require_user
 from fermerce.lib.shared.dependency import AppAuth
 
 router = APIRouter(

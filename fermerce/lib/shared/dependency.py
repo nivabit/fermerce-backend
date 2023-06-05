@@ -4,7 +4,7 @@ import jose
 from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import OAuth2PasswordBearer
 
-# from fermerce.app.users.permission.model import Permission
+# from fermerce.app.permission.model import Permission
 from fermerce.lib.errors import error
 from fermerce.core.settings import config as base_config
 from fermerce.lib.utils import get_api_prefix

@@ -1,7 +1,7 @@
 # from fermerce.taskiq.broker import broker
 import time
-from fermerce.app.users.auth import models
-from fermerce.app.users.user.models import User
+from fermerce.app.auth import models
+from fermerce.app.user.models import User
 
 
 async def create_token(

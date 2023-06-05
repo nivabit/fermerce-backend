@@ -2,7 +2,6 @@ import uuid
 import typing as t
 from fastapi import Request, UploadFile
 from tortoise import fields, models
-from fermerce.app.products.product.models import Product
 from fermerce.core.settings import config
 
 

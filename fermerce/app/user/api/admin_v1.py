@@ -2,16 +2,13 @@ import typing as t
 import uuid
 from fastapi import APIRouter, Depends, Query, status
 from fermerce.app.user import schemas, services
-
-# from src.app.users.staff import dependency
+from fermerce.app.staff import dependency
 from fermerce.core.enum.sort_type import SearchType, SortOrder
 from fermerce.core.schemas.response import ITotalCount
 from fermerce.app.user.api import USER_META
 from fermerce.app.user.api import USER_META
 
-router = APIRouter(
-    prefix=USER_META.get("router_prefix"), tags=[USER_META.get("tag")]
-)
+router = APIRouter(prefix=USER_META.get("router_prefix"), tags=[USER_META.get("tag")])
 
 
 @router.get(
@@ -57,7 +54,7 @@ async def get_users_list(
 @router.get(
     "/total/count",
     response_model=ITotalCount,
-    # dependencies=[Depends(dependency.require_super_admin_or_admin)],
+    dependencies=[Depends(dependency.require_super_admin_or_admin)],
 )
 async def get_total_users() -> ITotalCount:
     return await services.get_total_users()
@@ -66,7 +63,7 @@ async def get_total_users() -> ITotalCount:
 @router.delete(
     "/",
     status_code=status.HTTP_200_OK,
-    # dependencies=[Depends(dependency.require_super_admin)],
+    dependencies=[Depends(dependency.require_super_admin)],
 )
 async def delete_user(data_in: schemas.IUserRemove) -> None:
     return await services.remove_users_data(data_in=data_in)
@@ -76,7 +73,7 @@ async def delete_user(data_in: schemas.IUserRemove) -> None:
     "/{users_id}",
     response_model=t.Union[schemas.IUserOutFull, schemas.IUserOut],
     status_code=status.HTTP_200_OK,
-    # dependencies=[Depends(dependency.require_super_admin_or_admin)],
+    dependencies=[Depends(dependency.require_super_admin_or_admin)],
 )
 async def get_user(
     users_id: uuid.UUID,

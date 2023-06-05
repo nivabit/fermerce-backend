@@ -36,9 +36,7 @@ async def create(data_in=schemas.IVendorIn):
             to_create.update({"logo": logo})
     new_vendor = await models.Vendor.create(**to_create)
     if new_vendor:
-        return IResponseMessage(
-            message="Vendor account was created successfully"
-        )
+        return IResponseMessage(message="Vendor account was created successfully")
     raise error.ServerError("Error creating business account")
 
 
@@ -74,9 +72,7 @@ async def login_vendor(
 ) -> t.Union[auth_schemas.IToken, IResponseMessage]:
     check_vendor = await models.Vendor.get_or_none(email=data_in.username)
     if not check_vendor:
-        raise error.UnauthorizedError(
-            detail="incorrect email, username or password"
-        )
+        raise error.UnauthorizedError(detail="incorrect email, username or password")
     if not check_vendor.check_password(data_in.password):
         raise error.UnauthorizedError(detail="incorrect email or password")
     if check_vendor.is_archived:
@@ -185,17 +181,13 @@ async def update_vendor_password(
 ) -> IResponseMessage:
     token_data: dict = security.JWTAUTH.data_decoder(encoded_data=data_in.token)
     if token_data and token_data.get("user_id", None):
-        vendor_obj = await models.Vendor.get_or_none(
-            id=token_data.get("user_id", None)
-        )
+        vendor_obj = await models.Vendor.get_or_none(id=token_data.get("user_id", None))
         if not vendor_obj:
             raise error.NotFoundError("User not found")
         if vendor_obj.reset_token != data_in.token:
             raise error.UnauthorizedError()
         if vendor_obj.check_password(data_in.password.get_secret_value()):
-            raise error.BadDataError(
-                "Try another password you have not used before"
-            )
+            raise error.BadDataError("Try another password you have not used before")
         token = security.JWTAUTH.data_encoder(
             data={"user_id": str(vendor_obj.id)}, duration=timedelta(days=1)
         )
@@ -275,9 +267,7 @@ async def update_vendor_password_no_token(
         raise error.BadDataError("Old password is incorrect")
 
     if vendor_obj.check_password(data_in.password.get_secret_value()):
-        raise error.BadDataError(
-            "Try another password you have not used before"
-        )
+        raise error.BadDataError("Try another password you have not used before")
     if await vendor_obj.update_from_dict(
         password=models.User.generate_hash(data_in.password.get_secret_value())
     ):

@@ -1,10 +1,9 @@
 import typing as t
-import uuid
 from fastapi import APIRouter, Depends, Query, status
 from fermerce.app.vendor import schemas
-from fermerce.app.vendor.services import business
+from fermerce.app.vendor import services
 
-# from src.app.users.staff import dependency
+from fermerce.app.staff import dependency
 from fermerce.core.enum.sort_type import SearchType, SortOrder
 from fermerce.core.schemas.response import ITotalCount
 from fermerce.app.vendor.api import VENDOR_META
@@ -16,8 +15,8 @@ router = APIRouter(
 
 @router.get(
     "/",
-    response_model=schemas.IVendorListOut
-    # dependencies=[Depends(dependency.require_super_admin_or_admin)],
+    response_model=schemas.IVendorListOut,
+    dependencies=[Depends(dependency.require_super_admin_or_admin)],
 )
 async def get_users_list(
     filter_string: t.Optional[str] = Query(
@@ -41,7 +40,7 @@ async def get_users_list(
     search_type: t.Optional[SearchType] = SearchType._and,
     load_related: t.Optional[bool] = False,
 ):
-    return await business.filter(
+    return await services.filter(
         filter_string=filter_string,
         per_page=per_page,
         page=page,
@@ -60,16 +59,16 @@ async def get_users_list(
 @router.get(
     "/total/count",
     response_model=ITotalCount,
-    # dependencies=[Depends(dependency.require_super_admin_or_admin)],
+    dependencies=[Depends(dependency.require_super_admin_or_admin)],
 )
 async def get_total_users() -> ITotalCount:
-    return await business.get_total_Vendors()
+    return await services.get_total_Vendors()
 
 
 @router.delete(
     "/",
     status_code=status.HTTP_200_OK,
-    # dependencies=[Depends(dependency.require_super_admin)],
+    dependencies=[Depends(dependency.require_super_admin)],
 )
 async def delete_vendor(data_in: schemas.IRemoveVendor) -> None:
-    return await business.remove_vendor_data(data_in=data_in)
+    return await services.remove_vendor_data(data_in=data_in)

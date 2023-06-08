@@ -15,8 +15,7 @@ router = APIRouter(
 @router.post(
     "/",
     dependencies=[
-        Depends(require_user),
-        Depends(AppAuth.verify_file_upload_api_key),
+        # Depends(AppAuth.verify_file_upload_api_key),
     ],
 )
 async def create_resource(

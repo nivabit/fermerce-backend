@@ -12,16 +12,14 @@ from fermerce.app.vendor import dependency
 router = APIRouter(prefix="/products", tags=["Product"])
 
 
-@router.post("/", response_model=schemas.IProductOut)
+@router.post("/")
 async def create_product(
-    request: Request,
     data_in: schemas.IProductIn,
     vendor: Vendor = Depends(dependency.require_vendor),
 ):
     return await services.create(
         vendor,
         data_in,
-        request=request,
     )
 
 

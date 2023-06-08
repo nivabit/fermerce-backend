@@ -6,7 +6,7 @@ from fermerce.app.vendor.models import Vendor
 from fermerce.app.measuring_unit.models import MeasuringUnit
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage
-from fermerce.core.services.base import filter_and_list
+from fermerce.core.services.base import filter_and_list, filter_and_single
 from fermerce.lib.errors import error
 from fermerce.app.selling_units import schemas, models
 from fermerce.app.product.models import Product
@@ -16,14 +16,10 @@ from fastapi import Response
 async def create(
     data_in: schemas.IProductSellingUnitIn, vendor: Vendor
 ) -> models.ProductSellingUnit:
-    get_product = await Product.get_or_none(
-        pk=data_in.product_id, vendor=vendor
-    )
+    get_product = await Product.get_or_none(pk=data_in.product_id, vendor=vendor)
     if not get_product:
         raise error.NotFoundError("Product not found")
-    get_measuring_unit = await MeasuringUnit.get_or_none(
-        id=data_in.selling_unit_id
-    )
+    get_measuring_unit = await MeasuringUnit.get_or_none(id=data_in.selling_unit_id)
     check_existing_unit = await models.ProductSellingUnit.get_or_none(
         unit=get_measuring_unit, product=get_product
     )
@@ -75,14 +71,20 @@ async def filter(
 
 
 async def get_selling_unit(
-    selling_unit_id: uuid.UUID, vendor: Vendor
+    selling_unit_id: uuid.UUID,
+    vendor: Vendor,
 ) -> t.List[models.ProductSellingUnit]:
-    get_selling_unit = await models.ProductSellingUnit.get_or_none(
-        pk=selling_unit_id, product__vendor=vendor
+    query = models.ProductSellingUnit.filter(
+        pk=selling_unit_id,
+        product__vendor=vendor,
     )
-    if not get_selling_unit:
+    result = await filter_and_single(
+        model=models.ProductSellingUnit,
+        query=query,
+    )
+    if not result:
         raise error.NotFoundError("product selling unit not found")
-    return get_selling_unit
+    return result
 
 
 async def get_product_selling_units(
@@ -117,16 +119,12 @@ async def update(
 async def delete(
     data_in: schemas.IProductRemoveSellingUnitIn, vendor: Vendor
 ) -> models.ProductSellingUnit:
-    get_product = await Product.get_or_none(
-        id=data_in.product_id, vendor=vendor
-    )
+    get_product = await Product.get_or_none(id=data_in.product_id, vendor=vendor)
     if not get_product:
         raise error.NotFoundError("product not found")
     selling_unit = await models.ProductSellingUnit.filter(
         product=data_in.product_id, id__in=data_in.selling_unit_ids
     ).delete()
     if not selling_unit:
-        raise error.NotFoundError(
-            "selling unit(s) does not exists for this product"
-        )
+        raise error.NotFoundError("selling unit(s) does not exists for this product")
     return Response(status_code=status.HTTP_204_NO_CONTENT)

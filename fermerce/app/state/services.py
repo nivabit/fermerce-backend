@@ -1,6 +1,7 @@
 import uuid
 import typing as t
 from fastapi import status
+from tortoise.expressions import Q
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import ITotalCount
 from fermerce.core.services.base import filter_and_list
@@ -33,7 +34,7 @@ async def get(
 
 # # get all permissions
 async def filter(
-    filter_string: str,
+    filter_string: str = None,
     per_page: int = 10,
     page: int = 0,
     select: str = "",

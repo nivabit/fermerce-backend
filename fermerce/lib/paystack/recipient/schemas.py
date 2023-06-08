@@ -12,10 +12,10 @@ class IMetaData(pyd.BaseModel):
 
 class ITransactionRecipientIn(pyd.BaseModel):
     type: str = "nuban"
+    currency: str = "NGN"
     name: str
     account_number: str
     bank_code: str
-    currency: str = "NGN"
 
     class Config:
         extra = "allow"

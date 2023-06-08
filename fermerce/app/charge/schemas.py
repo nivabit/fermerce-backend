@@ -9,6 +9,7 @@ class ICreateOrderPaymentIn(pyd.BaseModel):
 
 class IPaymentVerificationIn(pyd.BaseModel):
     reference: str
+    save_card: bool = True
 
 
 class CurrencyData(pyd.BaseModel):

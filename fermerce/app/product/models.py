@@ -12,8 +12,7 @@ from fermerce.lib.utils.random_string import random_str
 
 class Product(models.Model):
     class Meta:
-        table = "product"
-        ordering = ["-id", "-created_at"]
+        table = "fm_product"
 
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
     name = fields.CharField(max_length=50, null=False)
@@ -27,19 +26,19 @@ class Product(models.Model):
         unique=True,
     )
     cover_media = fields.ForeignKeyField(
-        "models.Media", related_name="cover_media", null=True
+        "models.Media",
+        related_name="cover_media",
+        null=True,
     )
     galleries = fields.ManyToManyField(
         "models.Media",
         related_name="product_galleries",
         through="fm_product_media_gallery",
     )
-    categories: fields.ManyToManyRelation[
-        ProductCategory
-    ] = fields.ManyToManyField(
+    categories: fields.ManyToManyRelation[ProductCategory] = fields.ManyToManyField(
         "models.ProductCategory",
         related_name="products",
-        through="fm_product_category",
+        through="fm_product_rel_category",
     )
     measurement_units: fields.ForeignKeyRelation[ProductSellingUnit]
     promo_codes: fields.ManyToManyRelation[ProductPromoCode]
@@ -49,9 +48,6 @@ class Product(models.Model):
     )
     created_at = fields.DatetimeField(auto_now=True)
     modified_at = fields.DatetimeField(auto_now_add=True)
-
-    class Meta:
-        table = "fm_product"
 
     @staticmethod
     def make_slug(name: str, random_length: int = 10) -> str:

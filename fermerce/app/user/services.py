@@ -63,24 +63,7 @@ async def update_user_details(data_in=schemas.IUserUpdateIn):
 
     if not users_update:
         raise error.ServerError("Could not updating  details, please try again")
-
-    if users_update and data_in.email:
-        await tasks.send_email_verification_email.kiq(
-            dict(
-                email=users_update.email,
-                id=str(users_update.id),
-                full_name=f"{users_update.firstname} {users_update.lastname}"
-                if users_update.firstname and users_update.lastname
-                else users_update.username,
-            )
-        )
-        return IResponseMessage(
-            message="Account was updated successfully, please check your email to confirm your email shipping_address"
-        )
-    else:
-        return IResponseMessage(
-            message="Account was updated successfully, please check your email to activate your account"
-        )
+    return IResponseMessage(message="Account was updated successfully")
 
 
 async def login(
@@ -92,9 +75,7 @@ async def login(
         Q(username__icontains=data_in.username) | Q(email=data_in.username)
     )
     if not check_user:
-        raise error.UnauthorizedError(
-            detail="incorrect email, username or password"
-        )
+        raise error.UnauthorizedError(detail="incorrect email, username or password")
     if not check_user.check_password(data_in.password):
         raise error.UnauthorizedError(detail="incorrect email or password")
     if check_user.is_archived:
@@ -114,9 +95,7 @@ async def login(
         return IResponseMessage(
             message="Your is not verified, Please check your for verification link before continuing"
         )
-    token = await auth_services.login(
-        request=request, task=task, user_id=check_user.id
-    )
+    token = await auth_services.login(request=request, task=task, user_id=check_user.id)
     if not token:
         raise error.ServerError("Count not authenticate user")
     return token
@@ -246,26 +225,20 @@ async def update_user_password(
 ) -> IResponseMessage:
     token_data: dict = security.JWTAUTH.data_decoder(encoded_data=data_in.token)
     if token_data and token_data.get("user_id", None):
-        users_obj = await models.User.get_or_none(
-            id=token_data.get("user_id", None)
-        )
+        users_obj = await models.User.get_or_none(id=token_data.get("user_id", None))
         if not users_obj:
             raise error.NotFoundError("User not found")
         if users_obj.reset_token != data_in.token:
             raise error.UnauthorizedError()
         if users_obj.check_password(data_in.password.get_secret_value()):
-            raise error.BadDataError(
-                "Try another password you have not used before"
-            )
+            raise error.BadDataError("Try another password you have not used before")
         token = security.JWTAUTH.data_encoder(
             data={"user_id": str(users_obj.id)}, duration=timedelta(days=1)
         )
         if token:
             await models.User.filter(id=users_obj.id).update(
-                reset_token=token,
-                password=models.User.generate_hash(
-                    data_in.password.get_secret_value()
-                ),
+                reset_token=None,
+                password=models.User.generate_hash(data_in.password.get_secret_value()),
             )
             await tasks.send_verify_users_password_reset.kiq(
                 dict(
@@ -277,6 +250,7 @@ async def update_user_password(
                     else users_obj.username,
                 )
             )
+
             return IResponseMessage(message="password was reset successfully")
     raise error.BadDataError("Invalid token was provided")
 
@@ -290,19 +264,19 @@ async def update_users_password_no_token(
         raise error.BadDataError("Old password is incorrect")
 
     if user_obj.check_password(data_in.password.get_secret_value()):
-        raise error.BadDataError(
-            "Try another password you have not used before"
+        raise error.BadDataError("Try another password you have not used before")
+    user_obj.update_from_dict(
+        dict(password=models.User.generate_hash(data_in.password.get_secret_value()))
+    )
+    await user_obj.save()
+    await tasks.send_users_password_reset_link.kiq(
+        dict(
+            email=user_obj.email,
+            id=str(user_obj.id),
+            full_name=f"{user_obj.firstname} {user_obj.lastname}",
         )
-    if await user_obj.update_from_dict(
-        password=models.User.generate_hash(data_in.password.get_secret_value())
-    ):
-        await tasks.send_users_password_reset_link.kiq(
-            dict(
-                email=user_obj.email,
-                id=str(user_obj.id),
-                full_name=f"{user_obj.firstname} {user_obj.lastname}",
-            )
-        )
+    )
+    if user_obj:
         return IResponseMessage(message="password was reset successfully")
     raise error.BadDataError("Invalid token was provided")
 
@@ -313,13 +287,9 @@ async def remove_users_data(data_in: schemas.IUserRemove) -> None:
         if data_in.permanent:
             await models.User.filter(id=user_to_remove.id).delete()
         else:
-            await models.User.filter(id=user_to_remove.id).update(
-                is_archived=True
-            )
+            await models.User.filter(id=user_to_remove.id).update(is_archived=True)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    raise error.NotFoundError(
-        f"User with  user id {data_in.user_id} does not exist"
-    )
+    raise error.NotFoundError(f"User with  user id {data_in.user_id} does not exist")
 
 
 async def get_total_users():
@@ -327,9 +297,7 @@ async def get_total_users():
     return ITotalCount(count=total_count).dict()
 
 
-async def get_user(
-    user_id: uuid.UUID, load_related: bool = False
-) -> models.User:
+async def get_user(user_id: uuid.UUID, load_related: bool = False) -> models.User:
     query = models.User.filter(id=user_id)
     try:
         result = await filter_and_single(

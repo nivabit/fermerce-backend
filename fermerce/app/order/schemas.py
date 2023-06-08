@@ -44,7 +44,7 @@ class IOrderUpdate(pyd.BaseModel):
 
 
 class IOrderUpdatePromoCodeIn(pyd.BaseModel):
-    order_item_id: uuid.UUID
+    order_id: uuid.UUID
     promo_code: str
 
 

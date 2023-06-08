@@ -6,15 +6,13 @@ from fermerce.app.vendor.models import Vendor
 from fermerce.app.product.models import Product
 from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage
-from fermerce.core.services.base import filter_and_list
+from fermerce.core.services.base import filter_and_list, filter_and_single
 from fermerce.lib.errors import error
 from fermerce.app.product_detail import models, schemas
 
 
 async def create_details(data_in: schemas.IProductDetailsIn, vendor: Vendor):
-    get_product = await Product.get_or_none(
-        id=data_in.product_id, vendor=vendor
-    )
+    get_product = await Product.get_or_none(id=data_in.product_id, vendor=vendor)
     if not get_product:
         raise error.NotFoundError("product detail not found")
     to_create = [
@@ -23,17 +21,21 @@ async def create_details(data_in: schemas.IProductDetailsIn, vendor: Vendor):
     ]
     created_details = await models.ProductDetail.bulk_create(to_create)
     if created_details:
-        return IResponseMessage(
-            message="Product details was created successfully"
-        )
+        return IResponseMessage(message="Product details was created successfully")
     raise error.ServerError("error creating product details")
 
 
-async def get_detail(detail_id: uuid.UUID) -> models.ProductDetail:
-    product_detail = await models.ProductDetail.get_or_none(id=detail_id)
-    if not product_detail:
+async def get_detail(
+    detail_id: uuid.UUID,
+) -> models.ProductDetail:
+    query = models.ProductDetail.filter(id=detail_id)
+    result = await filter_and_single(
+        model=models.ProductDetail,
+        query=query,
+    )
+    if not result:
         raise error.NotFoundError("product detail not found")
-    return product_detail
+    return result
 
 
 async def filter(
@@ -51,8 +53,7 @@ async def filter(
         query = query.filter(product=product_id)
     if filter_string:
         query = query.filter(
-            Q(title__icontains=filter_string)
-            | Q(description__icontains=filter_string)
+            Q(title__icontains=filter_string) | Q(description__icontains=filter_string)
         )
 
     results = await filter_and_list(
@@ -71,9 +72,7 @@ async def filter(
 async def update_product_detail(
     data_in: schemas.IProductDetailsUpdateIn, vendor: Vendor
 ) -> models.ProductDetail:
-    get_product = await Product.get_or_none(
-        id=data_in.product_id, vendor=vendor
-    )
+    get_product = await Product.get_or_none(id=data_in.product_id, vendor=vendor)
     if not get_product:
         raise error.NotFoundError("product not found")
 
@@ -92,9 +91,7 @@ async def update_product_detail(
 async def delete_product_detail(
     data_in: schemas.IProductDetailsRemoveIn, vendor: Vendor
 ):
-    get_product = await Product.get_or_none(
-        id=data_in.product_id, vendor=vendor
-    )
+    get_product = await Product.get_or_none(id=data_in.product_id, vendor=vendor)
     if not get_product:
         raise error.NotFoundError("product not found")
 

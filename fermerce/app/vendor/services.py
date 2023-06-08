@@ -27,8 +27,9 @@ async def create(data_in=schemas.IVendorIn):
         business_name=data_in.business_name,
         password=models.Vendor.generate_hash(
             data_in.password.get_secret_value(),
-            email=data_in.email,
         ),
+        phone_number=data_in.phone_number,
+        email=data_in.email,
     )
     if data_in.logo:
         logo = await Media.get_or_none(id=data_in.logo)
@@ -36,6 +37,16 @@ async def create(data_in=schemas.IVendorIn):
             to_create.update({"logo": logo})
     new_vendor = await models.Vendor.create(**to_create)
     if new_vendor:
+        await tasks.send_users_activation_email.kiq(
+            dict(
+                email=data_in.email,
+                id=str(new_vendor.id),
+                full_name=data_in.business_name,
+            )
+        )
+        return IResponseMessage(
+            message="Your email is not verified, Please check your for verification link before continuing"
+        )
         return IResponseMessage(message="Vendor account was created successfully")
     raise error.ServerError("Error creating business account")
 
@@ -98,11 +109,11 @@ async def login_vendor(
     return token
 
 
-async def check_user_email(
+async def check_business_name(
     data_in: schemas.ICheckUserEmail,
 ) -> IResponseMessage:
     check_user = await models.Vendor.get_or_none(
-        Q(email=data_in.username) | Q(username=data_in.username)
+        Q(email=data_in.username) | Q(business_name=data_in.username)
     )
     if not check_user:
         raise error.NotFoundError()
@@ -134,7 +145,7 @@ async def verify_vendor_email(
         raise error.BadDataError(
             detail="Account has been already verified",
         )
-    vendor_obj = await models.User.filter(id=vendor_obj.id).update(
+    vendor_obj = await models.Vendor.filter(id=vendor_obj.id).update(
         is_active=True, is_verified=True, is_suspended=False
     )
     if vendor_obj:
@@ -192,11 +203,13 @@ async def update_vendor_password(
             data={"user_id": str(vendor_obj.id)}, duration=timedelta(days=1)
         )
         if token:
-            await models.Vendor.filter(id=vendor_obj.id).update(
-                reset_token=token,
-                password=models.Vendor.generate_hash(
-                    data_in.password.get_secret_value()
-                ),
+            vendor_obj.update_from_dict(
+                dict(
+                    reset_token=None,
+                    password=models.Vendor.generate_hash(
+                        data_in.password.get_secret_value()
+                    ),
+                )
             )
             await tasks.send_verify_users_password_reset.kiq(
                 dict(
@@ -206,6 +219,7 @@ async def update_vendor_password(
                     full_name=vendor_obj.business_name,
                 )
             )
+            await vendor_obj.save()
             return IResponseMessage(message="password was reset successfully")
     raise error.BadDataError("Invalid token was provided")
 
@@ -229,7 +243,7 @@ async def filter(
         query = query.filter(
             Q(business_name__icontains=filter_string)
             | Q(email__icontains=filter_string)
-            | Q(phone__icontains=filter_string)
+            | Q(phone_number__icontains=filter_string)
         )
     if search_type == SearchType._or:
         query = query.filter(
@@ -259,23 +273,25 @@ async def filter(
 
 
 async def update_vendor_password_no_token(
-    data_in: schemas.IUserResetPasswordNoToken, vendor_obj: models.Vendor
+    data_in: schemas.IUserResetPasswordNoToken, vendor: models.Vendor
 ) -> IResponseMessage:
-    if not vendor_obj:
-        raise error.NotFoundError("User not found")
-    if not vendor_obj.check_password(data_in.old_password.get_secret_value()):
+    if not vendor.check_password(data_in.old_password.get_secret_value()):
         raise error.BadDataError("Old password is incorrect")
-
-    if vendor_obj.check_password(data_in.password.get_secret_value()):
+    if vendor.check_password(data_in.password.get_secret_value()):
         raise error.BadDataError("Try another password you have not used before")
-    if await vendor_obj.update_from_dict(
-        password=models.User.generate_hash(data_in.password.get_secret_value())
-    ):
+    vendor.update_from_dict(
+        dict(
+            password=models.Vendor.generate_hash(data_in.password.get_secret_value()),
+            reset_token=None,
+        )
+    )
+    await vendor.save()
+    if vendor:
         await tasks.send_users_password_reset_link.kiq(
             dict(
-                email=vendor_obj.email,
-                id=str(vendor_obj.id),
-                full_name=vendor_obj.business_name,
+                email=vendor.email,
+                id=str(vendor.id),
+                full_name=vendor.business_name,
             )
         )
         return IResponseMessage(message="password was reset successfully")
@@ -297,14 +313,16 @@ async def remove_vendor_data(data_in: schemas.IRemoveVendor) -> None:
     )
 
 
-async def get_vendor_details(vendor_id: str, load_related: bool = False):
+async def get_vendor_details(vendor_id: uuid.UUID, load_related: bool = False):
     query = models.Vendor.filter(id=vendor_id)
     result = await filter_and_single(
         model=models.Vendor,
         query=query,
         load_related=load_related,
     )
-    return result
+    if result is not None:
+        return result
+    raise error.NotFoundError("Vendor not found")
 
 
 async def get_total_Vendors():

@@ -22,8 +22,8 @@ auth = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_user(data_in: schemas.IVendorIn, request: Request):
-    return await services.create(data_in=data_in, request=request)
+async def create_user(data_in: schemas.IVendorIn):
+    return await services.create(data_in=data_in)
 
 
 @router.put("/", status_code=status.HTTP_200_OK)
@@ -109,9 +109,12 @@ async def update_vendor_password(
 @auth.put("/password/no_token", status_code=status.HTTP_200_OK)
 async def update_vendor_password_no_token(
     data_in: schemas.IUserResetPasswordNoToken,
-    vendor_data: Vendor = Depends(dependency.require_vendor),
+    vendor: Vendor = Depends(dependency.require_vendor),
 ) -> IResponseMessage:
-    return await services.update_vendor_password_no_token(data_in, vendor_data)
+    return await services.update_vendor_password_no_token(
+        data_in=data_in,
+        vendor=vendor,
+    )
 
 
 @auth.post(
@@ -122,17 +125,4 @@ async def update_vendor_password_no_token(
 async def check_user_email(
     data_in: schemas.ICheckUserEmail,
 ) -> IResponseMessage:
-    return await services.check_user_email(data_in)
-
-
-@router.get(
-    "/{vendor_id}",
-    response_model=t.Union[schemas.IVendorOutFull, schemas.IVendorOut],
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(require_super_admin)],
-)
-async def get_vendor(
-    vendor_id: uuid.UUID,
-    load_related: bool = True,
-):
-    return await services.get_vendor_details(vendor_id, load_related)
+    return await services.check_business_name(data_in)

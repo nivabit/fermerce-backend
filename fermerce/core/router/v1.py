@@ -38,8 +38,11 @@ from fermerce.app.cards.api.v1 import (
 )
 from fermerce.app.status.api.v1 import router as status_api_router
 from fermerce.app.medias.api.v1 import router as medias_api_router
-from fermerce.app.address.api.v1 import (
-    router as address_api_router,
+from fermerce.app.address.api.v1.shipping_address import (
+    router as shipping_address_api_router,
+)
+from fermerce.app.address.api.v1.vendor_v1 import (
+    router as business_address_api_router,
 )
 from fermerce.app.cart.api.v1 import router as cart_api_router
 
@@ -54,7 +57,8 @@ from fermerce.app.charge.api.v1 import router as payment_api_router
 router = APIRouter(prefix=get_api_prefix.get_prefix())
 router.include_router(router=users_api_router)
 router.include_router(router=users_auth_router)
-router.include_router(router=address_api_router)
+router.include_router(router=shipping_address_api_router)
+
 router.include_router(router=country_api_router)
 router.include_router(router=state_api_router)
 router.include_router(router=status_api_router)
@@ -68,6 +72,7 @@ router.include_router(router=save_cards_api_router)
 router.include_router(router=promotion_code_api_router)
 router.include_router(router=business_api_router)
 router.include_router(router=vendor_auth)
+router.include_router(router=business_address_api_router)
 router.include_router(router=medias_api_router)
 router.include_router(router=cart_api_router)
 router.include_router(router=order_api_router)

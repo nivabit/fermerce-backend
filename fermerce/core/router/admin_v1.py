@@ -7,6 +7,7 @@ from fermerce.app.permission.api.v1 import router as permission_api_router
 from fermerce.app.vendor.api.admin_v1 import (
     router as business_vendor_api_router,
 )
+from fermerce.app.warehouse.api.v1 import router as warehouse_api_router
 from fermerce.app.reviews.api.admin_v1 import (
     router as product_review_api_router,
 )
@@ -32,5 +33,6 @@ router.include_router(router=status_api_router)
 router.include_router(router=delivery_model_api_router)
 router.include_router(router=business_vendor_api_router)
 router.include_router(router=order_api_router)
+router.include_router(router=warehouse_api_router)
 router.include_router(router=product_review_api_router)
 router.include_router(router=payment_api_router)

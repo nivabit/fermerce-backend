@@ -17,13 +17,9 @@ from fermerce.app.medias.models import Media
 
 
 async def create(vendor: Vendor, data_in: schemas.IProductIn) -> models.Product:
-    check_product = await models.Product.get_or_none(
-        name=data_in.name, vendor=vendor
-    )
+    check_product = await models.Product.get_or_none(name=data_in.name, vendor=vendor)
     if check_product:
-        raise error.DuplicateError(
-            f"Product with name `{data_in.name}`already  exists"
-        )
+        raise error.DuplicateError(f"Product with name `{data_in.name}`already  exists")
 
     to_create = dict(
         name=data_in.name,
@@ -46,25 +42,19 @@ async def create(vendor: Vendor, data_in: schemas.IProductIn) -> models.Product:
         media_galleries_obj = await Media.filter(id__in=data_in.galleries).all()
         await new_product.galleries.add(*media_galleries_obj)
         if new_product:
-            return IResponseMessage(message="product created successfully")
+            return new_product
     raise error.ServerError("Error while creating product")
 
 
 async def update(
     vendor: Vendor, product_id: uuid.UUID, data_in: schemas.IProductIn
 ) -> models.Product:
-    check_product = await models.Product.get_or_none(
-        name=data_in.name, vendor=vendor
-    )
+    check_product = await models.Product.get_or_none(name=data_in.name, vendor=vendor)
     if check_product and check_product.id != product_id:
-        raise error.DuplicateError(
-            f"Product with name `{data_in.name}`already  exists"
-        )
+        raise error.DuplicateError(f"Product with name `{data_in.name}`already  exists")
     if data_in.categories:
         current_categories = await check_product.categories.all()
-        get_categories = await ProductCategory.filter(
-            id__in=data_in.categories
-        ).all()
+        get_categories = await ProductCategory.filter(id__in=data_in.categories).all()
         new_categories = []
         for category in get_categories:
             if category not in current_categories:
@@ -78,18 +68,14 @@ async def update(
         in_stock=data_in.in_stock,
     )
     if data_in.cover_img:
-        check_product_cover_media = await Media.get_or_none(
-            id=data_in.cover_img
-        )
+        check_product_cover_media = await Media.get_or_none(id=data_in.cover_img)
         if check_product_cover_media:
             to_update.update({"cover_img": check_product_cover_media})
     if data_in.galleries:
         media_galleries_obj = await Media.filter(id__in=data_in.galleries).all()
         if media_galleries_obj:
             await check_product.galleries.add(*media_galleries_obj)
-    updated_product = await models.Product.filter(id=product_id).update(
-        **to_update
-    )
+    updated_product = await models.Product.filter(id=product_id).update(**to_update)
 
     if updated_product:
         return IResponseMessage(message="product updated successfully")

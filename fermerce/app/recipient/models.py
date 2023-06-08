@@ -12,13 +12,14 @@ class DocumentEnum(str, Enum):
 
 class Recipient(models.Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
-    bank_detail = fields.OneToOneField(
-        "models.BankDetail", related_name="recipient"
-    )
+    bank_detail = fields.OneToOneField("models.BankDetail", related_name="recipient")
     recipient_code = fields.CharField(max_length=255)
     is_deleted = fields.BooleanField(default=False)
     vendor = fields.ForeignKeyField(
-        "models.Vendor", related_name="payment_recipients"
+        "models.Vendor",
+        related_name="payment_recipients",
+        on_delete=fields.SET_NULL,
+        null=True,
     )
     created_at = fields.DatetimeField(auto_now=True)
     updatedAt = fields.DatetimeField(auto_now_add=True)
@@ -29,21 +30,14 @@ class Recipient(models.Model):
 
 class BankDetail(models.Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
+    type: str = fields.CharField(max_length=20, default="nuban")
     vendor = fields.OneToOneField("models.Vendor", related_name="bank_detail")
+    currency = fields.CharField(max_length=10, default="NGN")
     bank_code = fields.CharField(max_length=10)
-    country_code = fields.CharField(max_length=10)
     account_number = fields.CharField(max_length=12)
     account_name = fields.CharField(max_length=255)
     verification: fields.BackwardOneToOneRelation["VendorVerification"]
     bvn = fields.CharField(max_length=20)
-    account_type = fields.CharField(max_length=100)
-    document_type = fields.CharEnumField(
-        DocumentEnum,
-        "bank verification document type",
-        max_length=30,
-        default=DocumentEnum.identityNumber,
-    )
-    document_number = fields.CharField(max_length=40)
     is_verified = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now=True)
     updated_at = fields.DatetimeField(auto_now_add=True)
@@ -57,14 +51,15 @@ class VendorVerification(models.Model):
     vendor = fields.OneToOneField(
         "models.Vendor",
         related_name="verification",
+        on_delete=fields.SET_NULL,
+        null=True,
     )
     account = fields.OneToOneField(
         "models.BankDetail",
-        related_name="business_account",
+        related_name="verification",
+        on_delete=fields.SET_NULL,
+        null=True,
     )
-
-    # TODO: add support for adding business owner discus with the team
-    # business_owner = fields.JSONField(default=None)
     is_verified = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)

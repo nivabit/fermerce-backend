@@ -2,7 +2,6 @@ import typing as t
 import uuid
 from fastapi import APIRouter, Depends, Query, status
 from fermerce.app.vendor.models import Vendor
-from fermerce.app.user.models import User
 from fermerce.app.selling_units import schemas, services
 from fermerce.app.vendor.dependency import require_vendor
 from fermerce.core.enum.sort_type import SortOrder
@@ -47,16 +46,18 @@ async def get_product_detail_list(
     )
 
 
-@router.get("/{selling_unit_id}", response_model=schemas.IProductSellingUnitOut)
+@router.get("/{selling_unit_id}")
 async def get_selling_unit(
-    selling_unit_id: uuid.UUID, vendor: Vendor = Depends(require_vendor)
+    selling_unit_id: uuid.UUID,
+    vendor: Vendor = Depends(require_vendor),
 ) -> schemas.IProductSellingUnitOut:
     return await services.get_selling_unit(
-        selling_unit_id=selling_unit_id, vendor=vendor
+        selling_unit_id=selling_unit_id,
+        vendor=vendor,
     )
 
 
-@router.put("/", response_model=schemas.IProductSellingUnitOut)
+@router.put("/")
 async def update_selling_unit(
     data_in: schemas.IProductSellingUnitIn,
     vendor: Vendor = Depends(require_vendor),

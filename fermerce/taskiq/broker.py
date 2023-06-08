@@ -14,15 +14,12 @@ env = os.environ.get("ENVIRONMENT")
 # Set up the broker
 broker: AsyncBroker = AioPikaBroker(
     url=config.get_broker_url(),
-    exchange_name=config.project_name.lower()
-    if config.project_name
-    else "taskiq",
+    exchange_name=config.project_name.lower() if config.project_name else "taskiq",
 )
 
-# broker = InMemoryBroker()
 
-# if env and env == "testing":
-#     broker = InMemoryBroker()
+if env and env == "testing":
+    broker = InMemoryBroker()
 
 taskiq_fastapi.init(broker, "main:app")
 

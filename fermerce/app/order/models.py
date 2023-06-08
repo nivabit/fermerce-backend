@@ -17,13 +17,12 @@ class Order(models.Model):
         unique=True,
     )
     user = fields.ForeignKeyField("models.User", related_name="orders")
-    shipping_address = fields.ForeignKeyField(
-        "models.Address", related_name="orders"
-    )
+    shipping_address = fields.ForeignKeyField("models.Address", related_name="orders")
+    meta = fields.JSONField(null=True, blank=True)
     payment: fields.BackwardOneToOneRelation[Charge]
     delivery_mode = fields.ForeignKeyField("models.DeliveryMode")
     is_complete = fields.BooleanField(default=False)
-    items: fields.ForeignKeyRelation["OrderItem"]
+    order_items: fields.ForeignKeyRelation["OrderItem"]
 
     class Meta:
         table = "fm_order"

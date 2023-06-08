@@ -36,7 +36,7 @@ async def create(
                     content_type=content_type,
                     alt=desire_alt if desire_alt else file_name,
                 )
-                to_out.append(result.id)
+                to_out.append(result)
         return to_out
 
     except Exception as e:

@@ -13,7 +13,6 @@ router = APIRouter(prefix="/countries", tags=["Country"])
 
 @router.post(
     "/",
-    response_model=schemas.ICountryOut,
     status_code=status.HTTP_201_CREATED,
     # dependencies=[Depends(require_super_admin_or_admin)],
 )
@@ -25,7 +24,6 @@ async def create_country(
 
 @router.get(
     "/",
-    response_model=schemas.ICountryListOut,
     # dependencies=[Depends(require_super_admin_or_admin)],
 )
 async def get_country_list(
@@ -58,7 +56,6 @@ async def get_country_list(
 
 @router.get(
     "/{country_id}",
-    response_model=schemas.ICountryOut,
     # dependencies=[Depends(require_super_admin_or_admin)],
 )
 async def get_country(country_id: uuid.UUID) -> schemas.ICountryOut:
@@ -67,7 +64,6 @@ async def get_country(country_id: uuid.UUID) -> schemas.ICountryOut:
 
 @router.put(
     "/{country_id}",
-    response_model=schemas.ICountryOut,
     # dependencies=[Depends(require_super_admin_or_admin)],
 )
 async def update_country(

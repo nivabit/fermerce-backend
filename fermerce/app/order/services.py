@@ -13,6 +13,7 @@ from fermerce.core.enum.sort_type import SortOrder
 from fermerce.core.schemas.response import IResponseMessage
 from fermerce.core.services.base import filter_and_list, filter_and_single
 from fermerce.lib.errors import error
+from fermerce.taskiq.warehouse.tasks import add_order_to_warehouse_and_vendor
 
 
 async def create(
@@ -60,6 +61,7 @@ async def create(
         if order_items_list:
             results = await models.OrderItem.bulk_create(order_items_list)
             if results:
+                await add_order_to_warehouse_and_vendor(order_id=new_order.id)
                 deleted_count = await Cart.filter(
                     user=user, id__in=data_in.cart_ids
                 ).delete()
@@ -88,39 +90,37 @@ async def update_order_status(data_in: schemas.IOrderUpdate) -> dict:
 async def add_promo_code(
     data_in: schemas.IOrderUpdatePromoCodeIn, user: User
 ) -> IResponseMessage:
-    get_item = await models.OrderItem.get_or_none(
-        id=data_in.order_item_id, order__user=user
-    ).select_related("product", "product__vendor")
-    if not get_item:
-        raise error.NotFoundError("Order item is not found")
+    get_order_items = (
+        await models.OrderItem.filter(order__id=data_in.order_id, order__user=user)
+        .select_related("product__vendor", "product", "product__promo_codes")
+        .all()
+    )
+    if not get_order_items:
+        raise error.NotFoundError("Order not found")
     promo_code = await ProductPromoCode.get_or_none(
         code=data_in.promo_code,
         active_from__lte=datetime.datetime.utcnow().date(),
         active_to__gte=datetime.datetime.utcnow().date(),
-    ).select_related("vendor")
+    ).select_related("vendor", "products")
     if not promo_code:
-        raise error.NotFoundError("Promo code not found")
-    if get_item.product.vendor.id == promo_code.vendor.id:
-        if promo_code.single:
-            if await get_item.promo_codes.filter(id=promo_code.id).exists():
-                return IResponseMessage(
-                    message="promo code  has already bean applied"
-                )
-            await get_item.promo_codes.add(promo_code)
-            return IResponseMessage(message="Order status updated successfully")
-        else:
-            if await promo_code.products.filter(
-                id=get_item.product.id
-            ).exists():
-                if await get_item.promo_codes.filter(id=promo_code.id).exists():
-                    return IResponseMessage(
-                        message="Order status updated successfully"
-                    )
-                await get_item.promo_codes.add(promo_code)
-                return IResponseMessage(
-                    message="Order status updated successfully"
-                )
         raise error.BadDataError("Invalid promo code")
+    promo_codes_product = await promo_code.products.all()
+    for item in get_order_items:
+        if isinstance(promo_code.products, list):
+            if item.product in promo_codes_product:
+                if not promo_code in await item.promo_codes.all():
+                    await item.promo_codes.add(promo_code)
+        if item.product == promo_code.products:
+            if not promo_code in await item.promo_codes.all():
+                await item.promo_codes.add(promo_code)
+        if promo_code.vendor == item.product.vendor and promo_code.single == False:
+            if isinstance(promo_code.products, list):
+                if not promo_code in promo_codes_product:
+                    await item.promo_codes.add(promo_code)
+            if item.product == promo_code.products:
+                if not promo_code in promo_codes_product:
+                    await item.promo_codes.add(promo_code)
+        return IResponseMessage(message="promo code was applied successfully")
     raise error.BadDataError("Invalid promo code")
 
 

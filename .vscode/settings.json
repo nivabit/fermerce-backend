@@ -10,7 +10,15 @@
     "**/**/__pycache__": true,
     "**/**.pytest_cache": true
   },
-  "cSpell.words": ["exhange", "Farmerce", "kombu", "uselist", "uvicorn"],
+  "cSpell.words": [
+    "condecimal",
+    "exhange",
+    "Farmerce",
+    "gmaps",
+    "kombu",
+    "uselist",
+    "uvicorn"
+  ],
   "python.testing.pytestArgs": ["test"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,

@@ -55,7 +55,9 @@ async def create_product_details(
 async def get_product_detail(
     detail_id: uuid.UUID,
 ) -> schemas.IProductDetailsOut:
-    return await services.get_detail(detail_id=detail_id)
+    return await services.get_detail(
+        detail_id=detail_id,
+    )
 
 
 @router.put("/", response_model=schemas.IProductDetailsOut)

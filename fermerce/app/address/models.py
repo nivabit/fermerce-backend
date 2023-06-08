@@ -1,7 +1,7 @@
 import uuid
 from tortoise import fields, models
-from fermerce.app.vendor.models import Vendor
 from fermerce.app.user.models import User
+from fermerce.app.vendor.models import Vendor
 
 
 class Address(models.Model):
@@ -10,8 +10,8 @@ class Address(models.Model):
     city = fields.CharField(max_length=100)
     phones = fields.CharField(max_length=100, null=True)
     state = fields.ForeignKeyField("models.State", related_name="address")
-    user: fields.ForeignKeyRelation[User]
-    vendor: fields.ForeignKeyRelation[Vendor]
+    users: fields.ManyToManyRelation[User]
+    vendors: fields.ManyToManyRelation[Vendor]
     zipcode = fields.CharField(max_length=10, null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
 

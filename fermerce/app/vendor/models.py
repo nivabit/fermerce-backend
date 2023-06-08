@@ -1,7 +1,7 @@
 import uuid
 from tortoise import fields, models
 from fermerce.app.order.models import OrderItem
-from fermerce.app.charge.models import TransferPayment
+from fermerce.app.transfer.models import TransferPayment
 from fermerce.app.recipient.models import VendorVerification
 from fermerce.lib.utils.password_hasher import Hasher
 
@@ -13,15 +13,14 @@ class Vendor(models.Model):
     business_name = fields.CharField(max_length=30, null=False)
     logo = fields.ForeignKeyField("models.Media", null=True)
     phone_number = fields.CharField(max_length=20, default=None)
-    address = fields.ForeignKeyField(
+    address = fields.ManyToManyField(
         "models.Address",
-        related_name="vendor",
+        through="fm_business_address",
+        related_name="vendors",
     )
     rating = fields.FloatField(default=0.0, null=True)
     verification: fields.BackwardOneToOneRelation["VendorVerification"]
-    payments: fields.ManyToManyRelation[
-        TransferPayment
-    ] = fields.ManyToManyField(
+    payments: fields.ManyToManyRelation[TransferPayment] = fields.ManyToManyField(
         "models.TransferPayment",
         related_name="payouts",
         through="fm_vendor_payout",

@@ -11,10 +11,9 @@ class User(models.Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4())
     username = fields.CharField(max_length=20, unique=True)
     firstname = fields.CharField(max_length=50, null=True)
-    lastname = fields.CharField(
-        max_length=50, null=True, unique=True, index=True
-    )
+    lastname = fields.CharField(max_length=50, null=True, unique=True, index=True)
     email = fields.CharField(max_length=70, null=False, unique=True, index=True)
+    password = fields.CharField(max_length=255, null=True)
     is_verified = fields.BooleanField(default=False, null=True)
     is_suspended = fields.BooleanField(default=False, null=True)
     is_active = fields.BooleanField(default=False, null=True)
@@ -27,7 +26,7 @@ class User(models.Model):
     shipping_address = fields.ManyToManyField(
         "models.Address",
         through="fm_shipping_address",
-        related_name="user_shipping",
+        related_name="users",
     )
     carts = fields.ReverseRelation[Cart]
     orders = fields.ReverseRelation[Order]

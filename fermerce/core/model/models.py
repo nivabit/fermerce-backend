@@ -14,10 +14,8 @@ from fermerce.app.delivery_mode.models import DeliveryMode
 from fermerce.app.order.models import Order, OrderItem
 from fermerce.app.cards.models import SaveCard
 
-from fermerce.app.charge.models import (
-    Charge,
-    TransferPayment,
-)
+from fermerce.app.charge.models import Charge
+from fermerce.app.transfer.models import TransferPayment
 
 from fermerce.app.recipient.models import Recipient
 from fermerce.app.refund.models import Refund
@@ -39,6 +37,7 @@ from fermerce.app.measuring_unit.models import MeasuringUnit
 from fermerce.app.promo_code.models import ProductPromoCode
 from fermerce.app.category.models import ProductCategory
 from fermerce.app.reviews.models import Review
+from fermerce.app.warehouse.models import WereHouse
 from fermerce.app.status.models import Status
 from fermerce.app.product.models import Product, ProductDetail
 from fermerce.app.tracking.models import Tracking

@@ -53,6 +53,9 @@ class Settings(pyd.BaseSettings):
     algorithm: str = os.getenv("ALGORITHM")
     access_token_expire_time: int = os.getenv("ACCESS_TOKEN_EXPIRE_TIME")
     refresh_token_expire_time: int = os.getenv("REFRESH_TOKEN_EXPIRE_TIME")
+
+    # Google API Key
+    google_api_key: str = os.getenv("GOOGLE_API_KEY")
     # payment service settings
     base_payment_url: str = os.getenv("BASE_PAYMENT_URL")
     payment_secret_key: str = os.getenv("PAYMENT_SECRET_KEY")

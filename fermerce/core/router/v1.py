@@ -18,8 +18,12 @@ from fermerce.app.vendor.api.v1 import (
     router as business_api_router,
     auth as vendor_auth,
 )
+
 from fermerce.app.measuring_unit.api.v1 import (
     router as measurement_unit_api_router,
+)
+from fermerce.app.wishlist.api.v1 import (
+    router as wish_list_api_router,
 )
 from fermerce.app.reviews.api.v1 import (
     router as review_unit_api_router,
@@ -72,6 +76,7 @@ router.include_router(router=save_cards_api_router)
 router.include_router(router=promotion_code_api_router)
 router.include_router(router=business_api_router)
 router.include_router(router=vendor_auth)
+router.include_router(router=wish_list_api_router)
 router.include_router(router=business_address_api_router)
 router.include_router(router=medias_api_router)
 router.include_router(router=cart_api_router)

@@ -32,7 +32,7 @@ from fermerce.app.vendor.models import (
 
 from fermerce.app.medias.models import Media
 from fermerce.app.address.models import Address
-
+from fermerce.app.wishlist.models import WishList
 from fermerce.app.measuring_unit.models import MeasuringUnit
 from fermerce.app.promo_code.models import ProductPromoCode
 from fermerce.app.category.models import ProductCategory

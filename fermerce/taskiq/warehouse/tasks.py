@@ -1,7 +1,6 @@
 import typing as t
 import uuid
 from fermerce.app.order.models import Order, OrderItem
-
 from fermerce.app.warehouse.models import WereHouse
 from fermerce.taskiq.broker import broker
 

@@ -16,7 +16,7 @@ def as_form(cls: Type[BaseModel]):
             default=(Form(field.default) if not field.required else Form(...)),
             annotation=field.outer_type_,
         )
-        for field in cls.__fields__.values()
+        for field in cls.model_fields.values()
     ]
 
     async def _as_form(**data):

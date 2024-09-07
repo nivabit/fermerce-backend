@@ -1,6 +1,6 @@
 import typing as t
-from fastapi import Request, status
-from fastapi.responses import JSONResponse, Response
+from esmerald import Request, status
+from esmerald.responses import JSONResponse, Response
 from fastapi.concurrency import iterate_in_threadpool
 
 

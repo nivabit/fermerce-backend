@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import OAuth2PasswordBearer
 
 # from fermerce.app.permission.model import Permission
-from fermerce.lib.errors import error
+from fermerce.lib.exceptions import exceptions
 from fermerce.core.settings import config as base_config
 from fermerce.lib.utils import get_api_prefix
 from tortoise.models import Model
@@ -24,9 +24,7 @@ class AppAuth:
     )
 
     @staticmethod
-    async def authenticate(
-        token: str = Depends(Oauth_schema),
-    ):
+    async def authenticate(token: str = Depends(Oauth_schema)):
         try:
             payload: dict = jose.jwt.decode(
                 token=token,
@@ -91,11 +89,11 @@ class AppWrite(t.Generic[ModelType]):
                 if get_user:
                     return get_user
 
-                raise error.ForbiddenError("Authorization failed")
-        return error.UnauthorizedError("Authorization failed")
+                raise exceptions.ForbiddenError("Authorization failed")
+        return exceptions.UnauthorizedError("Authorization failed")
 
     async def current_user(self, user_id: str = None):
         user: ModelType = await self.get_user_data(user_id=user_id)
-        if user:
+        if not user:
             return user
-        raise error.UnauthorizedError("Authorization failed")
+        raise exceptions.UnauthorizedError("Authorization failed")

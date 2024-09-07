@@ -6,11 +6,10 @@ from email.mime import multipart, text
 from email.utils import formataddr
 from typing import Optional, List, Union
 import pydantic
-from fermerce.lib.shared.mail import exception
+from fermerce.lib.exceptions import mailException
 from fermerce.lib.shared.mail import template_finder
 from fermerce.core.settings import config
-
-from fermerce.lib.errors import error
+from fermerce.lib.exceptions import exceptions
 
 
 class Mailer(template_finder.MailTemplate):
@@ -78,7 +77,7 @@ class Mailer(template_finder.MailTemplate):
             body_content = self.body
             message.attach(text.MIMEText(body_content, "plain"))
         else:
-            raise exception.InvalidEmailContentError(
+            raise mailException.InvalidEmailContentError(
                 "Email body content is required"
             )
         if self.attachments:
@@ -95,4 +94,4 @@ class Mailer(template_finder.MailTemplate):
                 smtp.sendmail(from_email, email, message.as_string())
             pass
         except Exception:
-            raise error.ServerError("Could not connect to mail server")
+            raise exceptions.ServerError("Could not connect to mail server")

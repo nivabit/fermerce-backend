@@ -1,65 +1,35 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+#!/usr/bin/env python
+
+
+import os
+import sys
+from pathlib import Path
 from fermerce.core.settings import config
-from fermerce.lib.db.config import register_tortoise_to_fastapi
-from fermerce.lib.middleware.response_formatter import response_data_transformer
-from fermerce.core.router import v1, admin_v1
-from fermerce.core.schemas.response import IHealthCheck
-from fermerce.taskiq.broker import broker
+from esmerald import Esmerald, Include
+from edgy import Migrate
+
+
+def build_path():
+    Path(__file__).resolve().parent.parent
+    SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+
+    if SITE_ROOT not in sys.path:
+        sys.path.append(SITE_ROOT)
+        sys.path.append(os.path.join(SITE_ROOT, "fermerce"))
 
 
 def get_application():
-    _app = FastAPI(
-        title=config.project_name,
-        version=config.project_version,
-        openapi_url=f"/{config.api_prefix}/v{int(config.project_version)}/openapi.json",
-        redoc_url=f"/{config.api_prefix}/v{int(config.project_version)}/redoc",
-        contact={
-            "email": config.contact_email,
-            "name": config.contact_name,
-        },
-        docs_url=f"/{config.api_prefix}/v{int(config.project_version)}/docs",
-        debug=config.debug,
-    )
-    register_tortoise_to_fastapi(_app)
-    _app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in config.backend_cors_origins],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+    build_path()
+    database, registry = config.database_config
+
+    app = Esmerald(
+        routes=[Include(namespace="fermerce.core.router.v1")],
+        on_startup=[database.connect],
+        on_shutdown=[database.disconnect],
     )
 
-    # _app.middleware("http")(response_data_transformer)
-
-    return _app
+    Migrate(app=app, registry=registry)
+    return app
 
 
 app = get_application()
-
-
-@app.on_event("startup")
-async def start_broker():
-    if not broker.is_worker_process:
-        print("Starting broker")
-        await broker.startup()
-
-
-@app.on_event("shutdown")
-async def app_shutdown():
-    if not broker.is_worker_process:
-        print("Shutting down broker")
-        await broker.shutdown()
-
-
-@app.get("/", response_model=IHealthCheck, tags=["Health status"])
-async def health_check():
-    return IHealthCheck(
-        name=config.project_name,
-        version=config.project_version,
-        description=config.project_description,
-    )
-
-
-app.include_router(v1.router)
-app.include_router(admin_v1.router)

@@ -3,7 +3,7 @@ from typing import Optional, Union
 from fastapi import HTTPException, status
 from jose import JWTError
 from jose import jwt
-from fermerce.lib.errors import error
+from fermerce.lib.exceptions import exceptions
 from fermerce.core.settings import config
 
 
@@ -23,10 +23,10 @@ class JWTAUTH:
 
             if payload:
                 return payload
-            raise error.UnauthorizedError("Invalid token provided")
+            raise exceptions.UnauthorizedError("Invalid token provided")
 
         except JWTError:
-            raise error.UnauthorizedError("Invalid token provided")
+            raise exceptions.UnauthorizedError("Invalid token provided")
 
     @staticmethod
     def data_encoder(
@@ -53,7 +53,7 @@ class JWTAUTH:
             )
             return encoded_data
         except JWTError:
-            raise error.ServerError(
+            raise exceptions.ServerError(
                 "Could not complete request please try again"
             )
 

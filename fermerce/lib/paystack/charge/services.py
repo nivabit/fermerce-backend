@@ -1,6 +1,6 @@
 from fermerce.lib.paystack.charge import schemas
 from fermerce.lib.paystack import client, endpoint
-from fermerce.lib.errors import error
+from fermerce.lib.exceptions import exceptions
 
 
 async def create_charge(data_in: schemas.IChargeRequest):
@@ -11,7 +11,7 @@ async def create_charge(data_in: schemas.IChargeRequest):
         data = schemas.IChargeRequestOut(**response.json())
         return data
     except Exception:
-        raise error.ServerError("Error creating payment request")
+        raise exceptions.ServerError("Error creating payment request")
 
 
 async def create_authorized_charge(data_in: schemas.ISavedCardChargeIn):
@@ -23,7 +23,7 @@ async def create_authorized_charge(data_in: schemas.ISavedCardChargeIn):
         data: schemas.IChargeRequestOut = response.json()
         return data
     except Exception:
-        raise error.ServerError("Error creating payment request")
+        raise exceptions.ServerError("Error creating payment request")
 
 
 async def charge_verification(payment_reference: str):
@@ -34,4 +34,4 @@ async def charge_verification(payment_reference: str):
         return data
     except Exception as e:
         print(e)
-        raise error.BadDataError("Error verifying payment transaction")
+        raise exceptions.BadDataError("Error verifying payment transaction")

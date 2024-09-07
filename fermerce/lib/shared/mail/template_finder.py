@@ -4,7 +4,7 @@ from jinja2.exceptions import TemplateNotFound
 
 import pydantic
 
-from fermerce.lib.shared.mail.exception import (
+from fermerce.lib.exceptions.mailException import (
     EmailTemplateNotFoundError,
 )
 

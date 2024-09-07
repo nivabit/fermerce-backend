@@ -3,7 +3,7 @@ import uvicorn
 
 
 def run_server():
-    uvicorn.run("main:app", reload=config.debug, workers=8)
+    uvicorn.run("main:app", reload=config.debug, workers=8, port=8001)
 
 
 if __name__ == "__main__":

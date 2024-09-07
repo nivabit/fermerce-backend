@@ -1,6 +1,6 @@
 from fermerce.lib.paystack.refund import schemas
 from fermerce.lib.paystack import client, endpoint
-from fermerce.lib.errors import error
+from fermerce.lib.exceptions import exceptions
 
 
 # payment refund
@@ -12,7 +12,7 @@ async def create_refund(data_in: schemas.RefundTransactionIn):
         data: schemas.IRefundSingleResponse = response.json()
         return data
     except Exception:
-        raise error.BadDataError(detail="Error refunding transaction")
+        raise exceptions.BadDataError(detail="Error refunding transaction")
 
 
 async def get_refund(reference_code: str):
@@ -23,4 +23,4 @@ async def get_refund(reference_code: str):
         data: schemas.IRefundSingleResponse = response.json()
         return data
     except Exception:
-        raise error.ServerError("Error listing refunds")
+        raise exceptions.ServerError("Error listing refunds")

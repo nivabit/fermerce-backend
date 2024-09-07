@@ -1,7 +1,7 @@
 import typing as t
 from fermerce.lib.paystack.recipient import schemas
 from fermerce.lib.paystack import client, endpoint
-from fermerce.lib.errors import error
+from fermerce.lib.exceptions import exceptions
 
 
 async def create_trans_recipient(data_in: schemas.ITransactionRecipientIn):
@@ -13,7 +13,7 @@ async def create_trans_recipient(data_in: schemas.ITransactionRecipientIn):
         data = schemas.TransferRecipientResponse(**response.json())
         return data
     except Exception:
-        raise error.ServerError("Error creating payment recipient")
+        raise exceptions.ServerError("Error creating payment recipient")
 
 
 async def update_trans_recipient(
@@ -27,7 +27,7 @@ async def update_trans_recipient(
         data = schemas.TransferRecipientResponse(response.json())
         return data
     except Exception:
-        raise error.ServerError("Error updating payment recipient")
+        raise exceptions.ServerError("Error updating payment recipient")
 
 
 async def create_bulk_trans_recipient(
@@ -41,7 +41,7 @@ async def create_bulk_trans_recipient(
         data = schemas.TransferRecipientBulkResponse(response.json())
         return data
     except Exception:
-        raise error.ServerError("Error creating payment request")
+        raise exceptions.ServerError("Error creating payment request")
 
 
 async def get_trans_recipient(recipient_code: str):
@@ -52,7 +52,7 @@ async def get_trans_recipient(recipient_code: str):
         data = schemas.TransferRecipientResponse(response.json())
         return data
     except Exception:
-        raise error.ServerError("Error getting payment recipient information")
+        raise exceptions.ServerError("Error getting payment recipient information")
 
 
 async def delete_trans_recipient(recipient_code: str):
@@ -63,4 +63,4 @@ async def delete_trans_recipient(recipient_code: str):
         data: t.Dict[t.Dict] = response.json()
         return data
     except Exception:
-        raise error.ServerError("Error deleting payment recipient")
+        raise exceptions.ServerError("Error deleting payment recipient")
